@@ -47,7 +47,7 @@ Besides that, I was also worried I might run through my rate limit when calling 
 
         comfy node registry-install ComfyUI-IMGNR-Utils
 
-- Manual Installation (ToSVG-Potracer only)
+- Manual Installation
   1. Navigate to your /ComfyUI/custom_nodes/ folder.
   2. Run the following command to clone the repository:
 
