@@ -37,7 +37,7 @@ Besides that, I was also worried I might run through my rate limit when calling 
 
 ## Installation
 
-- Loading the [Example Workflow](/example_workflows/Catch_Edit_Text_Example_Workflow.json) here and allowing ComfyUI to install missing nodes.
+- Loading the [Example Workflow](/example_workflows/Catch_Edit_Text_Example_Workflow.json) here or from [Openart.ai](https://openart.ai/workflows/awkward_monster00/catch-edit-text/YAvjBwemGeCnuuoMLxTx) and allowing ComfyUI to install missing nodes.
   
 - Using ComfyUI Manager --> Custom Node Manager --> Search for:
 
