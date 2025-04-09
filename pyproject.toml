@@ -1,0 +1,21 @@
+# pyproject.toml (for Comfy Registry)
+
+[project]
+# Unique identifier for your node package. Immutable after creation on the registry.
+name = "ComfyUI-IMGNR-Utils"
+description = "ComfyUI Utility Nodes by Imagineer. Currently 1: Catch and Edit Text, useful for grabbing AI generated prompts which you edit by hand. Doing so mutes the upstream node, improving speed and saving external calls and budget."
+# Your node package's version. MUST follow semantic versioning (e.g., MAJOR.MINOR.PATCH).
+version = "1.0.0" #
+# license = { file = "LICENSE" }
+# Project dependencies. PEP 621 standard replaces requirements.txt here.
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils"
+
+[tool.comfy]
+PublisherId = "imagineernl" # Publisher ID from Comfy Registry Website
+DisplayName = "ComfyUI-ToSVG-Potracer" # Display name for the Custom Node. Can be changed later
+# URL pointing to an icon for your package. MUST be a direct link to an image.
+# SVG, PNG, JPG or GIF (MAX. 800x400px).
+Icon = "https://raw.githubusercontent.com/ImagineerNL/ComfyUI-IMGNR-Utils/refs/heads/main/img/IMGNR-Utils.jpg" #

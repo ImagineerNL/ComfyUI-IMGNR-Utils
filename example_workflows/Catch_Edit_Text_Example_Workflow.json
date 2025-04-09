@@ -1,0 +1,181 @@
+{
+  "id": "f8e686cc-5e3d-42f1-bff4-fbd3526c85ef",
+  "revision": 0,
+  "last_node_id": 26,
+  "last_link_id": 27,
+  "nodes": [
+    {
+      "id": 26,
+      "type": "ShowText|pysssss",
+      "pos": [
+        -937.6484985351562,
+        888.2133178710938
+      ],
+      "size": [
+        339.8804016113281,
+        341.2644348144531
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "shape": 6,
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfyui-custom-scripts",
+        "ver": "1.2.3",
+        "Node name for S&R": "ShowText|pysssss"
+      },
+      "widgets_values": [
+        "",
+        "A fluffy-tailed ELEPHANT, perched atop a towering oak tree, meticulously buries an acorn.  The scene should be bathed in the warm, golden light of a late afternoon sun, casting long shadows across the forest floor.  The ELEPHANT should be highly detailed, with individual hairs visible on its fur, showcasing a rich, reddish-brown coloration.  Its eyes should be bright and alert, conveying a sense of mischievous intelligence.  The oak tree should be ancient and gnarled, its bark textured and deeply furrowed, with leaves in vibrant autumn hues of red, orange, and yellow.  Consider using the keywords:  photorealistic, autumn, oak tree, squirrel, acorn, detailed, golden light, shadows, forest floor, leaves, depth of field,  vibrant colors.\n"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "LayerUtility: Gemini",
+      "pos": [
+        -1891.6417236328125,
+        901.0075073242188
+      ],
+      "size": [
+        400,
+        252
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "shape": 6,
+          "type": "STRING",
+          "links": [
+            26
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "ComfyUI_LayerStyle_Advance",
+        "ver": "89aadaa6c0b8c9adfab86f5d0196f1d13383d47c",
+        "Node name for S&R": "LayerUtility: Gemini"
+      },
+      "widgets_values": [
+        "gemini-1.5-flash",
+        4096,
+        0.5,
+        200,
+        "en",
+        "You are creating a prompt for Stable Diffusion to generate an image.",
+        "Generate a prompt about squirrels."
+      ],
+      "color": "rgba(38, 73, 116, 0.7)"
+    },
+    {
+      "id": 25,
+      "type": "CatchEditTextNode",
+      "pos": [
+        -1422.0501708984375,
+        894.67529296875
+      ],
+      "size": [
+        401.50787353515625,
+        307.8150634765625
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input_text",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "input_text"
+          },
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            27
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "ImagineerNL/ComfyUI-IMGNR-Utils",
+        "ver": "a7cd3c41b4cbdd014c1d8fee8da7f8bba1594f5e",
+        "Node name for S&R": "CatchEditTextNode"
+      },
+      "widgets_values": [
+        "A fluffy-tailed ELEPHANT, perched atop a towering oak tree, meticulously buries an acorn.  The scene should be bathed in the warm, golden light of a late afternoon sun, casting long shadows across the forest floor.  The ELEPHANT should be highly detailed, with individual hairs visible on its fur, showcasing a rich, reddish-brown coloration.  Its eyes should be bright and alert, conveying a sense of mischievous intelligence.  The oak tree should be ancient and gnarled, its bark textured and deeply furrowed, with leaves in vibrant autumn hues of red, orange, and yellow.  Consider using the keywords:  photorealistic, autumn, oak tree, squirrel, acorn, detailed, golden light, shadows, forest floor, leaves, depth of field,  vibrant colors.\n",
+        "use_edit_mute_input",
+        ""
+      ]
+    }
+  ],
+  "links": [
+    [
+      26,
+      2,
+      0,
+      25,
+      0,
+      "STRING"
+    ],
+    [
+      27,
+      25,
+      0,
+      26,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.0610764609500007,
+      "offset": [
+        2484.7565434070466,
+        -428.68052181585955
+      ]
+    },
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0
+  },
+  "version": 0.4
+}
