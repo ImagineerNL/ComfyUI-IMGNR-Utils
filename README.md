@@ -51,7 +51,7 @@ Besides that, I was also worried I might run through my rate limit when calling 
   1. Navigate to your /ComfyUI/custom_nodes/ folder.
   2. Run the following command to clone the repository:
 
-          git clone https://github.com/ImagineerNL/ComfyUI-IMGRNR-Utils
+          git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils
 
   3. *(Currently no requirements to install, this is for future reference)* Navigate to your ComfyUI-IMGNR-Utils folder.
        - Command for Portable/venv:
