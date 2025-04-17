@@ -1,5 +1,6 @@
-# Node Name: CatchEditTextNode
+# IMGNR UtilityPack/CatchEditText
 # Version: 1.0 - First Publication
+# 1.0.1 - streamlined for nodepack
 
 class CatchEditTextNode:
     """
@@ -45,7 +46,7 @@ class CatchEditTextNode:
 
     RETURN_TYPES = ("STRING",)
     FUNCTION = "process_text"
-    CATEGORY = "utils/text"
+    CATEGORY = "IMGNR/Utils"
     OUTPUT_NODE = True
 
     # --- Helper functions ---
@@ -129,5 +130,5 @@ NODE_CLASS_MAPPINGS = {
     "CatchEditTextNode": CatchEditTextNode
 }
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "CatchEditTextNode": "Catch and Edit text"
+    "CatchEditTextNode": "Catch and Edit Text (IMGNR)"
 }

@@ -1,26 +1,31 @@
-# __init__.py for ComfyUI-IMGNR-Utils
-from .catch_edit_text import NODE_CLASS_MAPPINGS, NODE_DISPLAY_NAME_MAPPINGS
+# IMGNR UtilityPack /__init__.py
 
-# Tells ComfyUI where to look for Javascript files
+# Import 1st node
+from .catch_edit_text import NODE_CLASS_MAPPINGS as catch_edit_mappings, NODE_DISPLAY_NAME_MAPPINGS as catch_edit_display_mappings
+
+# Import 2nd node
+from .preview_image_base64 import NODE_CLASS_MAPPINGS as preview_b64_mappings, NODE_DISPLAY_NAME_MAPPINGS as preview_b64_display_mappings
+
+# Location of Javascript files
 WEB_DIRECTORY = "./js"
 
-# --- Structure for Merging Mappings (for future nodes) ---
-# Initialize empty dictionaries
+# --- Structure for Merging Mappings ---
 ALL_NODE_CLASS_MAPPINGS = {}
 ALL_NODE_DISPLAY_NAME_MAPPINGS = {}
 
-# Update with mappings from your first node
-ALL_NODE_CLASS_MAPPINGS.update(NODE_CLASS_MAPPINGS)
-ALL_NODE_DISPLAY_NAME_MAPPINGS.update(NODE_DISPLAY_NAME_MAPPINGS)
+# Update with mappings from catch_edit_text
+ALL_NODE_CLASS_MAPPINGS.update(catch_edit_mappings)
+ALL_NODE_DISPLAY_NAME_MAPPINGS.update(catch_edit_display_mappings)
 
-# ALL_NODE_CLASS_MAPPINGS.update(another_class_map)
-# ALL_NODE_DISPLAY_NAME_MAPPINGS.update(another_display_map)
+# Update with mappings from preview_image_base64
+ALL_NODE_CLASS_MAPPINGS.update(preview_b64_mappings)
+ALL_NODE_DISPLAY_NAME_MAPPINGS.update(preview_b64_display_mappings)
 
-# Define __all__ with the final merged dictionaries ComfyUI expects
 __all__ = ['ALL_NODE_CLASS_MAPPINGS', 'ALL_NODE_DISPLAY_NAME_MAPPINGS']
 
-# Use the final merged dict names here for ComfyUI discovery
+# Use the final merged dict names
 NODE_CLASS_MAPPINGS = ALL_NODE_CLASS_MAPPINGS
 NODE_DISPLAY_NAME_MAPPINGS = ALL_NODE_DISPLAY_NAME_MAPPINGS
 
-print("### Loading Custom Nodes: IMGNR Utility Pack")
+# UPDATED print statement
+print("### Loading Custom Nodes: IMGNR/Utils Pack (CatchEditTextNode, PreviewImageBase64Node)")

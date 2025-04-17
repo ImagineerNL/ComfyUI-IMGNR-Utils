@@ -1,17 +1,21 @@
-# ComfyUI-IMGNR-Utils; In fieri
+# ComfyUI-IMGNR-Utils; *In fieri*
 
-- [ComfyUI-IMGNR-Utils; In fieri](#comfyui-imgnr-utils-in-fieri)
-  - [1. Catch \& Edit Text](#1-catch--edit-text)
+
+- [ComfyUI-IMGNR-Utils; *In fieri*](#comfyui-imgnr-utils-in-fieri)
+  - [Utilities](#utilities)
+    - [1. Catch \& Edit Text (IMGNR)](#1-catch--edit-text-imgnr)
+    - [2. "Preview Image - No Save (IMGNR)"](#2-preview-image---no-save-imgnr)
   - [Installation](#installation)
   - [Sources, Shoutouts, Love and Inspiration](#sources-shoutouts-love-and-inspiration)
   - [To Do](#to-do)
   - [Disclaimer](#disclaimer)
 
+## Utilities
 I created this as a custom node pack, as it is intended to become one place for multiple smaller utilities.
 Currently it only consists of Catch and Edit Text (Catch_Edit_Text) but will hopefully grow out to be more.
 My other B/W SVG conversion node, [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer), is currently a standalone node, due to its nature and requiring external nodepacks.
 
-## 1. Catch & Edit Text
+### 1. Catch & Edit Text (IMGNR)
 
 Usecase for this node is the loss of control I found when having my text prompts created by either an AI or a random generator. Pythongosssss has a great node that shows you the output of the text, called '[Show Text](https://github.com/pythongosssss/ComfyUI-Custom-Scripts?tab=readme-ov-file#show-text)', which at least shows you the prompt being generated. However, I often wanted to tweak the prompt to my personal likings, or simply because the output wasn't to my liking. But when you want to change that prompt, you have to create a new string of nodes and mix it with a switch to either take the generated prompt or your custom text. And there's no link between the generated prompt and your edits.
 
@@ -24,7 +28,7 @@ Besides that, I was also worried I might run through my rate limit when calling 
 | ![Example_Workflow](img/Catch_Edit_Text.gif) |
 | *Example workflow Catch and Edit Text* |
 
-------------------
+
 
 - NOTE: ONLY connect to the `INPUT_TEXT` below; <br>Connecting to the textbox turns this node effectively into a a/b switch instead of an editor.
 
@@ -34,6 +38,19 @@ Besides that, I was also worried I might run through my rate limit when calling 
 
 ------------------
 
+### 2. "Preview Image - No Save (IMGNR)"
+
+- Default "Preview"-nodes store their file in the ``ComfyUI\temp`` directory, before displaying it to the user. On reload of the page, the image is gone for the client, but it remains in the temp directory on the ComfyUI server. As this directory gets cleared upon ***next launch*** of the ComfyUI instance, the node isnt behaving like an actual disposable preview. And when you dont own the server, you have no influence on those cleanups.
+- "Preview Image - No Save (IMGNR)" does not create the file on disk; instead it sends it directly to the client, that loads it in the browser cache. On reload of the page, or when the next prompt is run, the preview is gone forever.
+You can opt to connect other image nodes for further processing that you *do* want to save.
+
+**And... why is this useful?**
+
+1. If you're creating a preview not intended to save, why keep it?
+2. If you're deciding you don't want an image; why is it still saved somewhere?
+3. Don't waste space with images saved in a location hard to reach.
+
+------------------
 
 ## Installation
 
@@ -67,14 +84,17 @@ Besides that, I was also worried I might run through my rate limit when calling 
 
 - [Custom Scripts node pack by Pythongosssss](https://github.com/pythongosssss/ComfyUI-Custom-Scripts)
 - [StabilityMatrix](https://github.com/LykosAI/StabilityMatrix)
+- Luis Quesada's [Inpaint Crop&Stitch](https://github.com/lquesada/ComfyUI-Inpaint-CropAndStitch) and [Interactive nodes](https://github.com/lquesada/ComfyUI-Interactive)
+- Shameless self plug: BW Image to Vector with [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer)
 - Gemini AI
-- Shameless self plug: [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer)
+
 
 ## To Do
 
 - [X] Deploy V1 to Github
 - [X] Deploy to Comfyregistry
 - [ ] Real life testing & feedback
+- [ ] Continue building on Utility*pack*
 
 ## Disclaimer
 
