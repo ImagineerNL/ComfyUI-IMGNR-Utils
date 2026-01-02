@@ -1,0 +1,13 @@
+{
+  "INT": {"inputs": ["value"], "outputs": ["INT"]},
+  "Integer": {"inputs": ["number"], "outputs": ["INT"]},
+  "CR Integer": {"inputs": ["value"], "outputs": ["INT"]},
+  "Seed": {"inputs": ["seed"], "outputs": ["INT"]},
+  "CLIPTextEncode": {"inputs": ["text", "clip"], "outputs": ["CONDITIONING"]},
+  "LoadImage": {"inputs": ["image"], "outputs": ["IMAGE", "MASK"]},
+  "EmptyLatentImage": {"inputs": ["width", "height", "batch_size"], "outputs": ["LATENT"]},
+  "CheckpointLoaderSimple": {"inputs": ["ckpt_name"], "outputs": ["MODEL", "CLIP", "VAE"]},
+  "VAEDecode": {"inputs": ["samples", "vae"], "outputs": ["IMAGE"]},
+  "ImageScale": {"inputs": ["image", "upscale_method", "width", "height", "crop"], "outputs": ["IMAGE"]},
+  "KSampler": {"inputs": ["model", "seed", "steps", "cfg", "sampler_name", "scheduler", "positive", "negative", "latent_image", "denoise"], "outputs": ["LATENT"]}
+}

@@ -1,14 +1,20 @@
 # ComfyUI-IMGNR-Utils; *In fieri*
 
-
 - [ComfyUI-IMGNR-Utils; *In fieri*](#comfyui-imgnr-utils-in-fieri)
+  - [Updates](#updates)
   - [Utilities](#utilities)
     - [1. Catch \& Edit Text (IMGNR)](#1-catch--edit-text-imgnr)
     - [2. "Preview Image - No Save (IMGNR)"](#2-preview-image---no-save-imgnr)
+    - [3. "U Might Have A Node For That"](#3-u-might-have-a-node-for-that)
   - [Installation](#installation)
   - [Sources, Shoutouts, Love and Inspiration](#sources-shoutouts-love-and-inspiration)
   - [To Do](#to-do)
   - [Disclaimer](#disclaimer)
+
+## Updates
+
+- *(2026-01-02)* V 2.0.0 Added new Utility: [UMightHaveANodeForThat](#3-u-might-have-a-node-for-that)
+
 
 ## Utilities
 I created this as a custom node pack, as it is intended to become one place for multiple smaller utilities.
@@ -49,6 +55,23 @@ You can opt to connect other image nodes for further processing that you *do* wa
 1. If you're creating a preview not intended to save, why keep it?
 2. If you're deciding you don't want an image; why is it still saved somewhere?
 3. Don't waste space with images saved in a location hard to reach.
+
+------------------
+
+### 3. "U Might Have A Node For That"
+
+Don't you hate it when you open a workflow from CivitAI, Openart.ai, Reddit or wherever and you get a whole bunch of red blocks of missing nodes and nodepacks? Even more frustrating when you discover you need to install a nodepack with functionality you already have? Like, how many 'INT-', 'String-' or 'Load Image-' nodes do you actually need?
+
+***"UMightHaveANodeForThat"** entered the chat*
+
+- A right-click menu item on your nodes, which enables you to easily find and spawn nodes with matching functionality.
+- As not all nodes have clear descriptions and input/output, the matching is based on 'name', 'S&R name', 'inputs' and 'outputs'. It could therefor also rank nodes that are actually different. But it could also rank nodes that don't *seem* to match, but actually *do*.
+- Also works wonders on trying to use as few custom nodepacks as possible in your workflow, and marks core comfyUI nodes as *(Core)
+
+| | |
+| :-------------: | :-------------: | 
+| ![UMightHaveANodeForThat](img/UMightHaveANodeForThat_1.png) |  ![UMightHaveANodeForThat](img/UMightHaveANodeForThat_2.png) |
+| *RightClick on an an existing or missing node, listed on the bottom* | *popup with ranked list of matching (installed) nodes* |
 
 ------------------
 
