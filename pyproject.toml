@@ -5,7 +5,7 @@
 name = "ComfyUI-IMGNR-Utils"
 description = "ComfyUI Utility Nodes by Imagineer: Catch and Edit Text; Preview Image - No Save; UMightHaveANodeForThat rightclick function."
 # Your node package's version. MUST follow semantic versioning (e.g., MAJOR.MINOR.PATCH).
-version = "2.0.0" #
+version = "2.1.0" #
 # license = { file = "LICENSE" }
 # Project dependencies. PEP 621 standard replaces requirements.txt here.
 dependencies = []
