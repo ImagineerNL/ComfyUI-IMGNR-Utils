@@ -1,24 +1,25 @@
-# ComfyUI-IMGNR-Utils; *In fieri*
+# ComfyUI-IMGNR-Utils; *In fieri* <!-- omit from toc -->
 
-- [ComfyUI-IMGNR-Utils; *In fieri*](#comfyui-imgnr-utils-in-fieri)
-  - [Updates](#updates)
-  - [Utilities](#utilities)
-    - [1. Catch \& Edit Text (IMGNR)](#1-catch--edit-text-imgnr)
-    - [2. "Preview Image - No Save (IMGNR)"](#2-preview-image---no-save-imgnr)
-    - [3. "U Might Have A Node For That"](#3-u-might-have-a-node-for-that)
-  - [Installation](#installation)
-  - [Sources, Shoutouts, Love and Inspiration](#sources-shoutouts-love-and-inspiration)
-  - [To Do](#to-do)
-  - [Disclaimer](#disclaimer)
-
-## Updates
-
-- *(2026-01-02)* V 2.0.0 Added new Utility: [UMightHaveANodeForThat](#3-u-might-have-a-node-for-that)
-
+- [Utilities](#utilities)
+  - [1. Catch \& Edit Text (IMGNR)](#1-catch--edit-text-imgnr)
+  - [2. "Preview Image - No Save (IMGNR)"](#2-preview-image---no-save-imgnr)
+  - [3. "U Might Have A Node For That"](#3-u-might-have-a-node-for-that)
+- [Installation](#installation)
+- [Sources, Resources, Shoutouts, Love and Inspiration](#sources-resources-shoutouts-love-and-inspiration)
+- [ChangeLog](#changelog)
+- [To Do / Known Issues](#to-do--known-issues)
+- [Disclaimer](#disclaimer)
 
 ## Utilities
-I created this as a custom node pack, as it is intended to become one place for multiple smaller utilities.
-Currently it only consists of Catch and Edit Text (Catch_Edit_Text) but will hopefully grow out to be more.
+
+I created this custom node pack with small Quality of Life utilities, based on the following rules:
+
+- Don't re-invent the wheel
+- Solve actual issues or annoyances
+- Small change, big impact
+- Make ComfyUI easier to use, not harder
+- Require as little external resources as possible.
+
 My other B/W SVG conversion node, [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer), is currently a standalone node, due to its nature and requiring external nodepacks.
 
 ### 1. Catch & Edit Text (IMGNR)
@@ -103,24 +104,31 @@ Don't you hate it when you open a workflow from CivitAI, Openart.ai, Reddit or w
              pip install -r requirements.txt
 
 
-## Sources, Shoutouts, Love and Inspiration
+## Sources, Resources, Shoutouts, Love and Inspiration
 
-- [Custom Scripts node pack by Pythongosssss](https://github.com/pythongosssss/ComfyUI-Custom-Scripts)
-- [StabilityMatrix](https://github.com/LykosAI/StabilityMatrix)
-- Luis Quesada's [Inpaint Crop&Stitch](https://github.com/lquesada/ComfyUI-Inpaint-CropAndStitch) and [Interactive nodes](https://github.com/lquesada/ComfyUI-Interactive)
-- Shameless self plug: BW Image to Vector with [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer)
+- [ComfyUI Nvidia Docker](https://github.com/mmartial/ComfyUI-Nvidia-Docker) by MMartial
+- [LoRaManager](https://github.com/willmiao/ComfyUI-Lora-Manager) by Willmiao
+- [Smart ComfyUI Gallery](https://github.com/biagiomaf/smart-comfyui-gallery) by Biagiomaf
+- [Custom Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) by Pythongosssss
+- [Inpaint Crop&Stitch](https://github.com/lquesada/ComfyUI-Inpaint-CropAndStitch) and [Interactive nodes](https://github.com/lquesada/ComfyUI-Interactive) by Luis Quesada
+- [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer), Smooth BW Image to Vector made by me (Shameless self-plug)
 - Gemini AI
 
+## ChangeLog
 
-## To Do
+- *(2026-01-02)* V 2.0.0 Added new Utility: [UMightHaveANodeForThat](#3-u-might-have-a-node-for-that)
+- *(2026-01-03)* V 2.1.0 Fix menu-item showing up unwanted and added menu in ComfyUI Settings for tweaking search/matching
 
-- [X] Deploy V1 to Github
-- [X] Deploy to Comfyregistry
-- [ ] Real life testing & feedback
-- [ ] Continue building on Utility*pack*
+## To Do / Known Issues
+
+- [ ] Preview Image resizes when out of view
+- [ ] Probably not 100% compatible with nodes2.0
+- [ ] Deciding on if i want that
+- [ ] Coded partially with Gemini AI, so needs more tweaking / cleaning 
+
 
 ## Disclaimer
 
-While tested thoroughly, and as with all custom nodes, **USE AT YOUR OWN RISK**.
-While tested a lot and I have IT knowledge, I am no programmer by trade. This is a passion project for my own specific usecase and I'm sharing it so other people might benefit from it just as much as i benefitted from others. I am convinced this implementation has its flaws and it will probably not work on all other installations worldwide.
+While tested thoroughly, and as with *all* custom nodes, **USE AT YOUR OWN RISK**.
+While tested a lot and I have a solid base of IT knowledge, I am no programmer by trade. This is a passion project for my own specific usecase and I'm sharing it so other people can benefit from it just as much as i benefitted from others. I am convinced this implementation has its flaws and it will probably not work on all other installations worldwide.
 I can not guarantee if this project will get more updates and when.

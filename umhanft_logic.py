@@ -2,9 +2,6 @@ import json, os, nodes, folder_paths, inspect
 from server import PromptServer
 from aiohttp import web
 
-# GLOBAL CONFIGURATION
-MAX_ALTERNATIVES = 15
-
 class UMHANFT_Logic:
     def __init__(self):
         self.base_db_path = os.path.join(os.path.dirname(__file__), "node_signatures_base.json")
@@ -12,7 +9,6 @@ class UMHANFT_Logic:
         self.user_db_path = os.path.join(comfy_path, "user", "umhanft_signatures.json")
         os.makedirs(os.path.dirname(self.user_db_path), exist_ok=True)
         
-        # Background scan on startup
         print(f"### [UMHANFT] Starting background library scan...")
         self.scan_all()
         print(f"### [UMHANFT] Scan complete. Library indexed.")
@@ -65,7 +61,7 @@ class UMHANFT_Logic:
             json.dump(user_scan, f, indent=2)
         self.signatures = self.load_combined_db()
 
-    def find_alternatives(self, target_node_type, target_title=None, neighbors=None, live_sig=None):
+    def find_alternatives(self, target_node_type, target_title=None, neighbors=None, live_sig=None, strict=True, min_score=50, max_alts=15, strict_connected=False):
         target_sig = self.signatures.get(target_node_type)
         if not target_sig and live_sig:
             target_sig = {
@@ -79,44 +75,58 @@ class UMHANFT_Logic:
         suggestions = []
         target_out = set(self.ensure_hashable(target_sig.get("output_types", [])))
         target_in = set(self.ensure_hashable(target_sig.get("input_types", [])))
+        
         target_snr = str(target_sig.get("snr", "")).lower()
+        clean_target_title = str(target_title or "").lower()
+        target_words = {w for w in (clean_target_title + " " + target_snr).split() if len(w) >= 3}
+
+        req_in = set(self.ensure_hashable(neighbors.get("required_inputs", []))) if neighbors else set()
+        prov_out = set(self.ensure_hashable(neighbors.get("provided_outputs", []))) if neighbors else set()
 
         for name, sig in self.signatures.items():
             if name == target_node_type: continue
             if name not in nodes.NODE_CLASS_MAPPINGS: continue
             
-            score = 0
             sig_out = set(self.ensure_hashable(sig.get("output_types", [])))
             sig_in = set(self.ensure_hashable(sig.get("input_types", [])))
 
-            if target_out and target_out.issubset(sig_out): score += 50
-            elif not target_out and not sig_out: score += 40
+            if strict and not (target_in & sig_in or target_out & sig_out): continue
+            if strict_connected:
+                if req_in and not req_in.issubset(sig_out): continue
+                if prov_out and not prov_out.issubset(sig_in): continue
+
+            score = 0
+            unique_types = {"MODEL", "LATENT", "VAE", "CLIP", "CONDITIONING", "CONTROL_NET", "IMAGE", "MASK", "AUDIO"}
+            matched_unique = (target_in & sig_in & unique_types) | (target_out & sig_out & unique_types)
+            if matched_unique: score += 40 
+
+            disp_name = nodes.NODE_DISPLAY_NAME_MAPPINGS.get(name, name).lower()
+            word_matches = [word for word in target_words if word in disp_name]
+            if word_matches:
+                score += 30 + (len(word_matches) * 10)
+
+            if target_out and target_out.issubset(sig_out): score += 30
+            elif not target_out and not sig_out: score += 20
             
             if target_in and target_in.issubset(sig_in): score += 20
-            elif not target_in and not sig_in: score += 40
+            elif not target_in and not sig_in: score += 20
 
             if neighbors:
-                req_in = set(self.ensure_hashable(neighbors.get("required_inputs", [])))
-                prov_out = set(self.ensure_hashable(neighbors.get("provided_outputs", [])))
-                if req_in.intersection(sig_out): score += 20
-                if prov_out.intersection(sig_in): score += 20
+                if req_in.intersection(sig_out): score += 25
+                if prov_out.intersection(sig_in): score += 25
 
-            if target_snr and target_snr == str(sig.get("snr", "")).lower(): score += 35
-            
-            keywords = {"float", "string", "image", "save", "load", "text", "int", "bool", "number"}
-            for kw in keywords:
-                if kw in name.lower() and kw in target_node_type.lower(): score += 15
-
-            if score >= 50:
+            if score >= min_score:
                 disp = nodes.NODE_DISPLAY_NAME_MAPPINGS.get(name, name)
                 suggestions.append({
                     "name": name, 
                     "display": f"{disp} {self.get_pack_name(name)}", 
                     "score": int(min(score, 100)),
+                    "raw_score": score,
                     "raw_name": disp.lower()
                 })
 
-        return sorted(suggestions, key=lambda x: (-x["score"], x["raw_name"]))[:MAX_ALTERNATIVES]
+        suggestions.sort(key=lambda x: (-x["raw_score"], x["raw_name"]))
+        return suggestions[:max_alts]
 
 logic_instance = UMHANFT_Logic()
 
@@ -124,8 +134,17 @@ logic_instance = UMHANFT_Logic()
 async def find_alt_handler(request):
     data = await request.json()
     node_type = data.get("node_type")
-    alts = logic_instance.find_alternatives(node_type, data.get("node_title"), data.get("neighbors"), data.get("live_sig"))
+    
+    alts = logic_instance.find_alternatives(
+        node_type, 
+        data.get("node_title"), 
+        data.get("neighbors"), 
+        data.get("live_sig"),
+        strict=data.get("strict", True),
+        min_score=data.get("min_score", 50),
+        max_alts=data.get("max_alts", 15),
+        strict_connected=data.get("strict_connected", False)
+    )
     return web.json_response({"alternatives": alts, "current_pack": logic_instance.get_pack_name(node_type), "count": len(alts)})
-
 NODE_CLASS_MAPPINGS = {}
 NODE_DISPLAY_NAME_MAPPINGS = {}
