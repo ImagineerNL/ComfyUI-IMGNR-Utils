@@ -33,7 +33,7 @@ Besides that, I was also worried I might run through my rate limit when calling 
 
   | |
   | :-------------: |
-  | ![Example_Workflow](img/Catch_Edit_Text.gif) |
+  | ![Example_Workflow](img/Catch_Edit_Text_V2.gif) |
   | *Example workflow Catch and Edit Text* |
 
   - NOTE: ONLY connect to the `INPUT_TEXT` below; <br>Connecting to the textbox turns this node effectively into a a/b switch instead of an editor.
@@ -99,7 +99,11 @@ Small utility node that enables you to easily create and use lists as selector l
   | ![Txt2Combo_3](img/Txt2Combo_3.png) |
   | <div align="left"><ul><li> *You can create or update files in `Txt2Combo writer` node (green), Or manually editing the files outside of ComfyUI.*</li><li> *Use `populate`(Yellow) to populate the textbox with a selected existing file.*</li><li> *Or use `inspect` to connect to any existing combobox and populate its values.*<br> *(Very handy to filter longer combos to just the combos you need)*</li><li> *Press `R` on node after edit to refresh the Text2combo node (Orange) values.*</li><li> *New files require restart of ComfyUI server to create the new node*</ul> </div>|
 
-  > *Due to heavy inspiration of code in the `String Outputlist` node in the [ComfyUI Outputlists Combiner by Gerold Mesinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner), the Txt2Combo Node and code is licensed under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.txt).*
+  | Example Usecase Txt2Combo |
+  | :-------------: |
+  | ![Example_Usecase](img/Txt2Combo_Usecase.gif) |
+  | *Using `Txt2Combo Writer` to inspect and populate the `Txt2Combo Example` node to filter an extensive list for your favorites* |
+  > *Due to heavy inspiration of the 'inspect' code in the `String Outputlist` node in the [ComfyUI Outputlists Combiner by Gerold Mesinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner), the Txt2Combo Node and code is licensed under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.txt).*
 
 ------------------
 
@@ -150,6 +154,7 @@ Small utility node that enables you to easily create and use lists as selector l
 | V2.0.0 | Added new Utility: [UMightHaveANodeForThat](#3-u-might-have-a-node-for-that) |
 | V2.1.0 | Fix menu-item showing up unwanted and added menu in ComfyUI Settings for tweaking search/matching |
 | V2.2.0 | Fix Issue [#3](https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils/issues/3), [#6](https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils/issues/6) <br> Tweaks on [Catch \& Edit Text (IMGNR)](#1-catch--edit-text-imgnr) and ["Preview Image - No Save (IMGNR)"](#2-preview-image---no-save-imgnr), <br> New Nodes: [4. "Txt2Combo (IMGNR) Autonodes"](#4-txt2combo-imgnr-autonodes), <br> Added Node Descriptions and tooltips. |
+| V2.2.1 | Too Much Info!! (Reduced text on tooltips)
 
 ## To Do / Known Issues
 

@@ -38,7 +38,7 @@ def create_file_if_missing(filename, content_list):
         except Exception as e:
             print(f"[Txt2Combo] Error creating {filename}: {e}")
 
-create_file_if_missing("example.txt", ["example 1", "example 2", "example 3"])
+create_file_if_missing("example.txt", ["example 1", "example 2", "example 3", "Values stored in User>IMGNR-Utils>Txt2Combo"])
 create_file_if_missing("cameras.txt", ["Canon", "Nikon", "Sony"])
 
 
@@ -49,15 +49,18 @@ class Txt2ComboWriter:
     Manage text lists for Txt2Combo nodes.
     Txt2Combo nodes are created on Server (Re)Start
     ComboList files are stored in User/IMGNR-Utils/Txt2Combo
-    Updated nodes during runtime need to be refreshed by pressing R on the specific node
+    Updated nodes during runtime need to be refreshed 
+    by pressing 'R' on the specific node
 
     - Populate: Reads an existing file into the Text box.
     - Append: Adds new items to the end of the selected file.
-    - Overwrite* Replaces the file content entirely.
+    - Overwrite: Replaces the file content, cannot be undone!
 
-    - Connect the 'inspect' output to an existing combobox to populate text box with values.
+    Connect the 'inspect' output to almost any existing 
+    combobox to populate text box with values.
     Very handy to filter longer combos to just the combos you need. 
-    * Connect functionality is heavily inspired by the wonderful String Outputlist by https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner
+     'inspect' functionality is heavily inspired on the wonderful 
+     [String Outputlist by GeroldMeisinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner)
     """
 
     def __init__(self):
@@ -74,22 +77,22 @@ class Txt2ComboWriter:
             "required": {
                 "select_file": (existing_files, {
                     "default": existing_files[0],
-                    "tooltip": "Select an existing file to read/edit, or choose 'Create New'."
+                    "tooltip": ""
                 }),
                 "filename": ("STRING", {
                     "default": "my_new_list", 
                     "multiline": False,
-                    "tooltip": "Name for the new file. Will be the name of new Txt2Combo Node Only used with 'Create New'."
+                    "tooltip": "Name for the new file. Also Name of new Txt2Combo Node"
                 }),
                 "mode": (["overwrite", "append", "populate"], {
                     "default": "populate",
-                    "tooltip": "Populate: Read file into Text box. Append: Add lines to end of file. Overwrite: Replace(!!) entire file."
+                    "tooltip": "Populate: Read file. Append: Add to file. Overwrite: Replace!! file"
                 }),
                 "content": ("STRING", {
                     "default": "", 
                     "multiline": True, 
                     "dynamicPrompts": False,
-                    "tooltip": "Each new line will be a separate option in the resulting Txt2Combo node file/node."
+                    "tooltip": "1 value per line"
                 }),
             },
             "hidden": {
@@ -99,13 +102,13 @@ class Txt2ComboWriter:
         }
 
     RETURN_TYPES = ("STRING", "STRING", ANY)
-    RETURN_NAMES = ("status", "content_out", "inspect")
+    RETURN_NAMES = ("dbg_status", "dbg_output", "inspect")
     
     # NEW: Tooltips for Outputs
     OUTPUT_TOOLTIPS = (
-        "Success or Error message regarding the file operation.",
-        "Content of text that was just written or read.",
-        "Connect this to any Dropdown/Combo input on any node to auto-populate the Content box here, then auto-disconnects."
+        "debug info",
+        "debug info",
+        "Connect to any Dropdown/Combo on any node to auto-populate, then auto-disconnects"
     )
 
     FUNCTION = "process_file"
