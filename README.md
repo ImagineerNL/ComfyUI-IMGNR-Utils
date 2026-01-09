@@ -74,6 +74,7 @@ Don't you hate it when you open a workflow from CivitAI, Openart.ai, Reddit or w
 - A right-click menu item on your nodes, which enables you to easily find and spawn nodes with matching functionality.
 - As not all nodes have clear descriptions and input/output, the matching is based on 'name', 'S&R name', 'inputs' and 'outputs'. It could therefor also rank nodes that are actually different. But it could also rank nodes that don't *seem* to match, but actually *do*.
 - Also works wonders on trying to use as few custom nodepacks as possible in your workflow, and marks core comfyUI nodes as *(Core)
+- Has a Settings item in ComfyUI Settings `UMightHaveANodeForThat` to tweak the ranked results
 
 | | |
 | :-------------: | :-------------: | 
