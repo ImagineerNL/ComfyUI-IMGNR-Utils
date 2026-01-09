@@ -19,8 +19,10 @@ class PreviewImageBase64Node:
     # 1. Add Node Description (Shows in Node Info)
     DESCRIPTION = """
     Displays input images directly in the node UI using Base64 encoding.
-    Unlike standard preview nodes, this does *not* save temporary files to your disk, keeping your output folder (and Server TEMP folder) clean.
-    It passes the original image data through unchanged, allowing it to be used as a non-destructive monitor anywhere in your workflow.
+    Unlike standard preview nodes, this does *not* save temporary files
+    to your disk, keeping your output and (server) temp folder clean.
+    It passes the original image data through unchanged, allowing it to 
+    be used as a non-destructive monitor anywhere in your workflow.
 
     Options:
     - Resize node to fit the image

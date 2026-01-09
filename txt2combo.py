@@ -49,15 +49,18 @@ class Txt2ComboWriter:
     Manage text lists for Txt2Combo nodes.
     Txt2Combo nodes are created on Server (Re)Start
     ComboList files are stored in User/IMGNR-Utils/Txt2Combo
-    Updated nodes during runtime need to be refreshed by pressing 'R' on the specific node
+    Updated nodes during runtime need to be refreshed 
+    by pressing 'R' on the specific node
 
     - Populate: Reads an existing file into the Text box.
     - Append: Adds new items to the end of the selected file.
-    - Overwrite* Replaces the file content entirely, cannot be undone!
+    - Overwrite: Replaces the file content, cannot be undone!
 
-    - Connect the 'inspect' output to almost any existing combobox to populate text box with values.
+    Connect the 'inspect' output to almost any existing 
+    combobox to populate text box with values.
     Very handy to filter longer combos to just the combos you need. 
-    * 'inspect' functionality is heavily inspired on the wonderful [String Outputlist by GeroldMeisinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner)
+     'inspect' functionality is heavily inspired on the wonderful 
+     [String Outputlist by GeroldMeisinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner)
     """
 
     def __init__(self):

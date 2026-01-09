@@ -5,15 +5,20 @@
 class CatchEditTextNode:
     DESCRIPTION = """
     Catches text from input and displays it the textbox.
-    Allows you to pause/block the upstream node and edit the text manually for subsequent runs.
-    Ideal for saving on unneeded resources or api calls to tweak LLM Output prompts.
+    Allows you to pause/block the upstream node and edit
+    the text manually for subsequent runs.
+    Ideal for saving on unneeded resources or api calls 
+    to tweak LLM Output prompts.
     
     Modes:
-    - Use Input: Passes the input text through directly. Updates the textbox with the input.
-    - Use_edit_mute_input: Ignores the input signal. Outputs the text currently in the textbox.
-    - Use_edit_BLOCK_inputnode: Actively prevents the previous node from executing. Uses the widget text.
+    - Use Input: Passes the connected input to output. 
+    Updates the textbox with the input.
+    - Use_edit_mute_input: Ignores the input signal. 
+    Outputs the text currently in the textbox.
+    - Use_edit_BLOCK_inputnode: Actively prevents the 
+    previous node from executing. Uses the widget text.
 
-    Use statuscolor toggle to visualy show selected mode on node header.
+    Use statuscolor toggle to show mode on node header.
     """
 
     @classmethod
@@ -21,11 +26,12 @@ class CatchEditTextNode:
         widget_default_text = (
             "Catches and shows any text being created by a previous node\n"
             "Enables editing the text for subsequent runs.\n"
-            "Mute (original behaviour) mutes connected input node.\n"
-            "If inputnode is forced to run (by e.g. randomize seed or other connected output to that node),\n"
+            "Mute: mutes connected input node.\n"
+            "If inputnode is forced to run,\n"
+            "(e.g. randomize seed or other connected output to that node),\n"
             "the input node still runs but the catcher ignores it.\n"
-            "Block inputnode actively prevents previous node from running.\n"
-            "Use statuscolor toggle to visualy show selected mode on node header."
+            "Block: actively prevents previous node from running.\n"
+            "Use statuscolor toggle to show mode on node header."
         )
         return {
             "required": {
