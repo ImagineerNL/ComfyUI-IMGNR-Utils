@@ -1,5 +1,6 @@
-# IMGNR UtilityPack/preview_image_base64
-# Version: 1.0 - First Publication
+# IMGNR-Utils/preview_image_base64
+# Fixes: "Resize Node to Image" now sets the node to the actual pixel dimensions of the image.
+# Fixes: "Node minimizes when losing focus"
 
 import os
 import torch
@@ -14,6 +15,18 @@ class PreviewImageBase64Node:
     Also passes the original IMAGE data through to an output slot.
     Does NOT save any temporary files to disk for the preview itself.
     """
+    
+    # 1. Add Node Description (Shows in Node Info)
+    DESCRIPTION = """
+    Displays input images directly in the node UI using Base64 encoding.
+    Unlike standard preview nodes, this does *not* save temporary files to your disk, keeping your output folder (and Server TEMP folder) clean.
+    It passes the original image data through unchanged, allowing it to be used as a non-destructive monitor anywhere in your workflow.
+
+    Options:
+    - Resize node to fit the image
+    - Scale imagesize to fit the node
+    """
+
     @classmethod
     def INPUT_TYPES(s):
         return {
@@ -46,15 +59,13 @@ class PreviewImageBase64Node:
         # Handle case where input is None
         if images is None:
             print(f"[{class_name_log}] No image input provided.")
-            # Return empty UI payload and maybe an empty tensor for the output?
-            # Creating an empty tensor might be better than returning None for IMAGE type
             output_images = torch.zeros([1, 64, 64, 3], dtype=torch.float32)
             return {"ui": {"imgnr_b64_previews": []}, "result": (output_images,)}
 
         # Generate Base64 preview data
         try:
             pil_images_for_preview = self.tensor_to_pil(images)
-            if pil_images_for_preview: # Check if list is not empty
+            if pil_images_for_preview:
                 img_for_preview = pil_images_for_preview[0]
                 width, height = img_for_preview.size
 
@@ -70,7 +81,6 @@ class PreviewImageBase64Node:
                     "width": width,
                     "height": height
                 })
-                # print(f"[{class_name_log}] Encoded image ({width}x{height}) to Base64 Data URI.") # Optional log
             else:
                  print(f"[{class_name_log}] No valid PIL images converted for preview.")
 
@@ -83,7 +93,7 @@ class PreviewImageBase64Node:
         return {"ui": {"imgnr_b64_previews": ui_payload}, "result": (output_images,)}
         # ------------------------------------------------------------------
 
-# === ComfyUI Registration ===
+# --- REGISTER NODES ---
 NODE_CLASS_MAPPINGS = {
     "PreviewImageBase64Node": PreviewImageBase64Node
     }

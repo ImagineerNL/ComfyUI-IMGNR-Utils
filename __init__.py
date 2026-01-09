@@ -1,4 +1,4 @@
-# IMGNR UtilityPack /__init__.py
+# IMGNR Utils /__init__.py
 
 # Import 1st node
 from .catch_edit_text import NODE_CLASS_MAPPINGS as catch_edit_mappings, NODE_DISPLAY_NAME_MAPPINGS as catch_edit_display_mappings
@@ -8,6 +8,9 @@ from .preview_image_base64 import NODE_CLASS_MAPPINGS as preview_b64_mappings, N
 
 # Import umhanft nodes
 from .umhanft_logic import NODE_CLASS_MAPPINGS as umhanft_mappings, NODE_DISPLAY_NAME_MAPPINGS as umhanft_display_mappings
+
+# Import txt2combo
+from .txt2combo import NODE_CLASS_MAPPINGS as txt2combo_mappings, NODE_DISPLAY_NAME_MAPPINGS as txt2combo_display_mappings
 
 # Location of Javascript files
 WEB_DIRECTORY = "./js"
@@ -28,6 +31,10 @@ ALL_NODE_DISPLAY_NAME_MAPPINGS.update(preview_b64_display_mappings)
 ALL_NODE_CLASS_MAPPINGS.update(umhanft_mappings)
 ALL_NODE_DISPLAY_NAME_MAPPINGS.update(umhanft_display_mappings)
 
+# Update with mappings from txt2combo
+ALL_NODE_CLASS_MAPPINGS.update(txt2combo_mappings)
+ALL_NODE_DISPLAY_NAME_MAPPINGS.update(txt2combo_display_mappings)
+
 __all__ = ['ALL_NODE_CLASS_MAPPINGS', 'ALL_NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIRECTORY']
 
 # Use the final merged dict names
@@ -35,4 +42,4 @@ NODE_CLASS_MAPPINGS = ALL_NODE_CLASS_MAPPINGS
 NODE_DISPLAY_NAME_MAPPINGS = ALL_NODE_DISPLAY_NAME_MAPPINGS
 
 # UPDATED print statement
-print("### Loading Custom Nodes: IMGNR/Utils Pack (CatchEditTextNode, PreviewImageBase64Node, UmhanftNodes)")
+print("### Loading Custom Nodes: IMGNR/Utils Pack (CatchEditText, PreviewImage, UMHANFT, Txt2Combo)")

@@ -1,76 +1,122 @@
-// MyUtilityPack/js/catch_edit_text.js
-// VERSION: Updated log tags
+// IMGNR-Utils/js/catch_edit_text.js
+// Version: Status Color + Toggle 
+// Support Soft + Hard Mute
 
 import { app } from "../../../scripts/app.js";
 
 app.registerExtension({
-    name: "Comfy.CatchEditTextNode.JS", // Using class name for uniqueness
+    name: "Comfy.CatchEditTextNode.JS", 
 
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
-        // Check for the correct Python class name
         if (nodeData.name === "CatchEditTextNode") {
 
-            // --- Store original functions ---
-            const onExecuted = nodeType.prototype.onExecuted;
             const onNodeCreated = nodeType.prototype.onNodeCreated;
+            nodeType.prototype.onNodeCreated = function () {
+                const r = onNodeCreated ? onNodeCreated.apply(this, arguments) : undefined;
+                
+                const node = this;
+                const actionWidget = node.widgets.find(w => w.name === "action");
+                const colorToggleWidget = node.widgets.find(w => w.name === "use_status_color");
 
-            // --- Executed Handler (updates widget display) ---
+                // --- HELPER: Set Upstream Mode & Visuals ---
+                const updateStatus = () => {
+                    const mode = actionWidget ? actionWidget.value : "use_input";
+                    const useColor = colorToggleWidget ? colorToggleWidget.value : true;
+
+                    // 1. Logic: Handle Upstream Mode
+                    if (node.inputs && node.inputs[0] && node.inputs[0].link !== null) {
+                        const linkInfo = app.graph.links[node.inputs[0].link];
+                        if (linkInfo) {
+                            const originNode = app.graph.getNodeById(linkInfo.origin_id);
+                            if (originNode) {
+                                // Hard Mute = Mode 2 (Never)
+                                // Soft Mute & Input = Mode 0 (Always/Normal)
+                                const targetMode = (mode === "use_edit_block_inputnode") ? 2 : 0;
+                                
+                                if (originNode.mode !== targetMode) {
+                                    originNode.mode = targetMode;
+                                }
+                            }
+                        }
+                    }
+
+                    // 2. Visuals: Update Title Bar Color
+                    if (useColor) {
+                        if (mode === "use_input") {
+                            node.color = "#2d4a2d"; // Forest Green
+                        } else if (mode === "use_edit_mute_input") {
+                            node.color = "#5e5e24"; // Muted Gold/Olive
+                        } else {
+                            node.color = "#5e2424"; // Muted Red
+                        }
+                    } else {
+                        // Reset to default theme color
+                        node.color = undefined;
+                    }
+
+                    // Force Canvas Redraw
+                    node.setDirtyCanvas(true, true);
+                };
+
+                // --- WIDGET CALLBACKS ---
+                
+                // 1. Action Dropdown Callback
+                if (actionWidget) {
+                    const originalCallback = actionWidget.callback;
+                    actionWidget.callback = function (value) {
+                        updateStatus();
+                        if (originalCallback) {
+                            return originalCallback.apply(this, arguments);
+                        }
+                    };
+                }
+
+                // 2. Color Toggle Callback
+                if (colorToggleWidget) {
+                    const originalCallback = colorToggleWidget.callback;
+                    colorToggleWidget.callback = function (value) {
+                        updateStatus();
+                        if (originalCallback) {
+                            return originalCallback.apply(this, arguments);
+                        }
+                    };
+                }
+                    
+                // Trigger once on startup
+                setTimeout(() => {
+                    updateStatus();
+                }, 100);
+
+                return r;
+            };
+
+            // --- AUTO-SWITCH ON CONNECT ---
+            const onConnectionsChange = nodeType.prototype.onConnectionsChange;
+            nodeType.prototype.onConnectionsChange = function (type, index, connected, link_info, ioSlot) {
+                if (onConnectionsChange) onConnectionsChange.apply(this, arguments);
+                
+                // If connecting input (index 0), switch to "use_input"
+                if (type === 1 && index === 0 && connected) {
+                    const actionWidget = this.widgets.find(w => w.name === "action");
+                    if (actionWidget && actionWidget.value !== "use_input") {
+                        actionWidget.value = "use_input";
+                        if (actionWidget.callback) actionWidget.callback("use_input");
+                    }
+                }
+            };
+
+            // --- UPDATE TEXT ON EXECUTE ---
+            const onExecuted = nodeType.prototype.onExecuted;
             nodeType.prototype.onExecuted = function (message) {
                 onExecuted?.apply(this, arguments);
                  if (message?.text && Array.isArray(message.text) && message.text.length > 0) {
                     const newText = message.text[0];
                     const targetWidget = this.widgets.find(w => w.name === "editable_text_widget");
-                    if (targetWidget) {
-                        if (targetWidget.value !== newText) {
-                            targetWidget.value = newText;
-                            console.log(`[CatchEditTextNode.JS] Updated widget '${targetWidget.name}' value via onExecuted.`); // UPDATED tag
-                        }
-                    } else {
-                         console.warn("[CatchEditTextNode.JS] Could not find widget named 'editable_text_widget' to update."); // UPDATED tag
+                    if (targetWidget && targetWidget.value !== newText) {
+                        targetWidget.value = newText;
                     }
                 }
             };
-
-            // --- Node Created Handler (attaches callback to action widget for muting) ---
-            nodeType.prototype.onNodeCreated = function () {
-                onNodeCreated?.apply(this, arguments);
-                const actionWidget = this.widgets.find(w => w.name === "action");
-
-                if (actionWidget) {
-                    const originalCallback = actionWidget.callback;
-                    actionWidget.callback = (value) => {
-                        originalCallback?.call(this, value);
-                        console.log(`[CatchEditTextNode.JS] Action changed to: ${value}`); // UPDATED tag
-                        const shouldMuteUpstream = (value === "use_edit_mute_input");
-                        this.setInputMuted(0, shouldMuteUpstream);
-                    };
-                } else {
-                     console.warn("[CatchEditTextNode.JS] Could not find 'action' widget to attach callback."); // UPDATED tag
-                }
-            };
-
-             // --- Helper Function: Set Mute state (unchanged logic) ---
-             nodeType.prototype.setInputMuted = function(inputIndex, shouldMute) {
-                if (!this.inputs || inputIndex >= this.inputs.length) { console.warn(`[CatchEditTextNode.JS] setInputMuted: Invalid input index ${inputIndex}`); return; } // UPDATED tag
-                const linkId = this.inputs[inputIndex].link;
-                if (linkId === null || linkId === undefined) { console.log(`[CatchEditTextNode.JS] setInputMuted: Input ${inputIndex} is not connected.`); return; } // UPDATED tag
-                const linkInfo = this.graph.links[linkId];
-                if (!linkInfo) { console.warn(`[CatchEditTextNode.JS] setInputMuted: Could not find link info for link ID ${linkId}`); return; } // UPDATED tag
-                const originNodeId = linkInfo.origin_id;
-                const upstreamNode = this.graph.getNodeById(originNodeId);
-                if (upstreamNode) {
-                    const targetMode = shouldMute ? 2 : 0;
-                    if (upstreamNode.mode !== targetMode) {
-                        upstreamNode.mode = targetMode;
-                        console.log(`[CatchEditTextNode.JS] setInputMuted: Set upstream node ${upstreamNode.id} mode to ${targetMode} (Muted: ${shouldMute})`); // UPDATED tag
-                    } else {
-                         console.log(`[CatchEditTextNode.JS] setInputMuted: Upstream node ${upstreamNode.id} mode already ${targetMode}.`); // UPDATED tag
-                    }
-                } else {
-                    console.warn(`[CatchEditTextNode.JS] setInputMuted: Could not find upstream node with ID ${originNodeId}`); // UPDATED tag
-                }
-             };
-
-        } // end if (nodeData.name === "CatchEditTextNode")
-    }, // end beforeRegisterNodeDef
-}); // end registerExtension
+        } 
+    }, 
+});
