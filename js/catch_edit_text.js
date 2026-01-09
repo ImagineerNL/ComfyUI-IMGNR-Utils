@@ -1,6 +1,7 @@
 // IMGNR-Utils/js/catch_edit_text.js
 // Version: Status Color + Toggle 
 // Support Soft + Hard Mute
+// Fix: Disabled native tooltip popup on text widget
 
 import { app } from "../../../scripts/app.js";
 
@@ -17,6 +18,18 @@ app.registerExtension({
                 const node = this;
                 const actionWidget = node.widgets.find(w => w.name === "action");
                 const colorToggleWidget = node.widgets.find(w => w.name === "use_status_color");
+
+                // ---  DISABLE NATIVE BROWSER TOOLTIP ---
+                // Prevents the full text content from popping up when hovering
+                const textWidget = node.widgets.find(w => w.name === "editable_text_widget");
+                if (textWidget && textWidget.inputEl) {
+                    textWidget.inputEl.title = "";
+                    Object.defineProperty(textWidget.inputEl, "title", {
+                        get() { return ""; },
+                        set(_) { }
+                    });
+                }
+                // -------------------------------------------
 
                 // --- HELPER: Set Upstream Mode & Visuals ---
                 const updateStatus = () => {

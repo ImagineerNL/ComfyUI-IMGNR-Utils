@@ -38,7 +38,7 @@ class CatchEditTextNode:
                 "editable_text_widget": ("STRING", {
                     "multiline": True,
                     "default": widget_default_text,
-                    "tooltip": ""
+                    #"tooltip": ""
                 }),
                 "action": (
                     ["use_input", "use_edit_mute_input", "use_edit_block_inputnode"],
