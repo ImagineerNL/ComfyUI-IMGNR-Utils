@@ -39,7 +39,7 @@ def create_file_if_missing(filename, content_list):
             print(f"[Txt2Combo] Error creating {filename}: {e}")
 
 create_file_if_missing("example.txt", ["example 1", "example 2", "example 3", "Values stored in User>IMGNR-Utils>Txt2Combo"])
-create_file_if_missing("cameras.txt", ["Canon", "Nikon", "Sony"])
+create_file_if_missing("cameras.txt", ["[Cameras]", "Canon", "Nikon", "Sony", "[Lens]", "Telephoto", "Portrait", "Wide-Angle", "70mm Prime"] )
 
 
 # --- WRITER NODE ---
@@ -59,8 +59,13 @@ class Txt2ComboWriter:
     Connect the 'inspect' output to almost any existing 
     combobox to populate text box with values.
     Very handy to filter longer combos to just the combos you need. 
-     'inspect' functionality is heavily inspired on the wonderful 
-     [String Outputlist by GeroldMeisinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner)
+    'inspect' functionality is heavily inspired on the wonderful 
+    Outputlist-combiner by GeroldMeisinger
+
+    Multi-Combo Support:
+    You can create multiple dropdowns in a single node by using brackets `[]`.
+    Note: Adding new files or `[Sections]` requires a Server Restart to update the node's output slots. 
+    Editing items inside existing sections only requires a Refresh (R).
     """
 
     def __init__(self):
@@ -82,7 +87,7 @@ class Txt2ComboWriter:
                 "filename": ("STRING", {
                     "default": "my_new_list", 
                     "multiline": False,
-                    "tooltip": "Name for the new file. Also Name of new Txt2Combo Node"
+                    "tooltip": "Name of new Txt2Combo Node"
                 }),
                 "mode": (["overwrite", "append", "populate"], {
                     "default": "populate",
@@ -92,7 +97,7 @@ class Txt2ComboWriter:
                     "default": "", 
                     "multiline": True, 
                     "dynamicPrompts": False,
-                    "tooltip": "1 value per line"
+                    "tooltip": "List items. Use [Section Name] to create multiple combos."
                 }),
             },
             "hidden": {
@@ -104,7 +109,6 @@ class Txt2ComboWriter:
     RETURN_TYPES = ("STRING", "STRING", ANY)
     RETURN_NAMES = ("dbg_status", "dbg_output", "inspect")
     
-    # NEW: Tooltips for Outputs
     OUTPUT_TOOLTIPS = (
         "debug info",
         "debug info",
@@ -182,33 +186,94 @@ class Txt2ComboWriter:
 # --- DYNAMIC READER NODES ---
 
 class Txt2ComboBase:
-    RETURN_TYPES = (ANY,)
-    RETURN_NAMES = ("text",)
-    OUTPUT_TOOLTIPS = ("The selected text string.",)
-    
     FUNCTION = "select_text"
     CATEGORY = "IMGNR/Utils"
 
-    def select_text(self, selected_value):
-        return (selected_value,)
+    # The logic is handled dynamically below, but we need a base execute
+    def select_text(self, **kwargs):
+        # Return values in the order of the keys (which matches output order)
+        return tuple(kwargs.values())
+
+def parse_file_sections(file_path):
+    """
+    Parses a file into a dictionary of sections.
+    Format:
+    [Section1]
+    item1
+    item2
+    [Section2]
+    item3
+    """
+    sections = {}
+    current_section = "text" # Default input name if no brackets found
+    
+    # Initialize default section
+    sections[current_section] = []
+
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                lines = [line.strip() for line in f if line.strip()]
+            
+            for line in lines:
+                if line.startswith("[") and line.endswith("]"):
+                    # New Section Found
+                    current_section = line[1:-1] # Remove brackets
+                    if current_section not in sections:
+                        sections[current_section] = []
+                else:
+                    sections[current_section].append(line)
+        except Exception:
+            sections["Error"] = ["Error reading file"]
+    else:
+        sections["Error"] = ["File Missing"]
+
+    # Clean up: If we found sections, remove the default if it's empty
+    if len(sections) > 1 and not sections["text"]:
+        del sections["text"]
+        
+    return sections
 
 def create_dynamic_node(filename_with_ext):
+    file_path = os.path.join(target_dir, filename_with_ext)
+    
+    # 1. Parse File to get Structure
+    # We do this at Import time to define Return Names
+    sections = parse_file_sections(file_path)
+    section_keys = list(sections.keys())
+
+    # 2. Define the INPUT_TYPES method dynamically
     def input_types_method(cls):
-        file_path = os.path.join(target_dir, filename_with_ext)
-        options = ["File Missing"]
-        if os.path.exists(file_path):
-            try:
-                with open(file_path, 'r', encoding='utf-8') as f:
-                    options = [line.strip() for line in f if line.strip()] or ["File is empty"]
-            except:
-                options = ["Error reading file"]
+        # Re-parse on input check (Allows "Refresh" to update values)
+        # Note: "Refresh" cannot update keys (Outputs) without restart
+        current_sections = parse_file_sections(file_path)
         
-        return {"required": {"selected_value": (options, {"default": options[0]})}}
+        inputs = {"required": {}}
+        for key in section_keys:
+            # Fallback if key missing in new file version
+            options = current_sections.get(key, ["missing_section"]) 
+            if not options: options = ["empty"]
+            
+            inputs["required"][key] = (options, {"default": options[0]})
+            
+        return inputs
 
     safe_name = filename_with_ext.replace(".", "_").replace(" ", "_")
     internal_class_name = f"Txt2Combo_{safe_name}"
 
-    DynamicClass = type(internal_class_name, (Txt2ComboBase,), {"INPUT_TYPES": classmethod(input_types_method)})
+    # 3. Create the Class
+    DynamicClass = type(
+        internal_class_name,
+        (Txt2ComboBase,), 
+        {
+            "INPUT_TYPES": classmethod(input_types_method),
+            # Create ANY output for every section found
+            "RETURN_TYPES": (ANY,) * len(section_keys),
+            "RETURN_NAMES": tuple(section_keys),
+            "OUTPUT_TOOLTIPS": tuple([f"Output for {k}" for k in section_keys])
+        }
+    )
+
     return DynamicClass, internal_class_name
 
 
