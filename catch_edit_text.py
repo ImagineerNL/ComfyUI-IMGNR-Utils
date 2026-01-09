@@ -3,7 +3,6 @@
 # Support Soft + Hard Mute
 
 class CatchEditTextNode:
-    # 1. Add Node Description (Shows in Node Info)
     DESCRIPTION = """
     Catches text from input and displays it the textbox.
     Allows you to pause/block the upstream node and edit the text manually for subsequent runs.
@@ -30,29 +29,28 @@ class CatchEditTextNode:
         )
         return {
             "required": {
-                # 2. Add Tooltips to Inputs
                 "editable_text_widget": ("STRING", {
                     "multiline": True,
                     "default": widget_default_text,
-                    "tooltip": "Main text area. In 'Use Input' mode, this updates automatically. In Mute/Block modes, you can edit this text."
+                    "tooltip": ""
                 }),
                 "action": (
                     ["use_input", "use_edit_mute_input", "use_edit_block_inputnode"],
                     {
                         "default": "use_input",
-                        "tooltip": " 'use_input': Pass through. 'use_edit_mute_input': Use widget text (ignore input). 'use_edit_block_inputnode': Use widget text (stop input node from running entirely)."
+                        "tooltip": "Mode Selector"
                     }
                 ),
                 "use_status_color": ("BOOLEAN", {
                     "default": True,
-                    "tooltip": "toggle to change node title color to match the state (Green=Pass, Yellow=Soft Mute, Red=Hard Block)."
+                    "tooltip": "Color Titlebar"
                 }),
             },
             "optional": {
                  "input_text": ("STRING", {
                      "default": "", 
                      "forceInput": True,
-                     "tooltip": "Connect text output from other node here."
+                     "tooltip": "Connect here"
                  })
             },
             "hidden": {
@@ -62,8 +60,7 @@ class CatchEditTextNode:
         }
 
     RETURN_TYPES = ("STRING",)
-    # 3. Add Tooltips to Outputs
-    OUTPUT_TOOLTIPS = ("The final text string (either the input or the edited text).",)
+    OUTPUT_TOOLTIPS = ("",)
     
     FUNCTION = "process_text"
     CATEGORY = "IMGNR/Utils"
