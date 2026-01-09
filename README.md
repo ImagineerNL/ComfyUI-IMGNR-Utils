@@ -4,9 +4,10 @@
   - [1. Catch \& Edit Text (IMGNR)](#1-catch--edit-text-imgnr)
   - [2. "Preview Image - No Save (IMGNR)"](#2-preview-image---no-save-imgnr)
   - [3. "U Might Have A Node For That"](#3-u-might-have-a-node-for-that)
+  - [4. "Txt2Combo (IMGNR) Autonodes"](#4-txt2combo-imgnr-autonodes)
 - [Installation](#installation)
 - [Sources, Resources, Shoutouts, Love and Inspiration](#sources-resources-shoutouts-love-and-inspiration)
-- [ChangeLog](#changelog)
+- [ChangeLog *V2.2.0 (2026-01-08)*](#changelog-v220-2026-01-08)
 - [To Do / Known Issues](#to-do--known-issues)
 - [Disclaimer](#disclaimer)
 
@@ -35,21 +36,26 @@ Besides that, I was also worried I might run through my rate limit when calling 
 | ![Example_Workflow](img/Catch_Edit_Text.gif) |
 | *Example workflow Catch and Edit Text* |
 
-
-
 - NOTE: ONLY connect to the `INPUT_TEXT` below; <br>Connecting to the textbox turns this node effectively into a a/b switch instead of an editor.
 
 - Output is controlled by `action` switch.
-  - `Use Input`: Outputs the connected text, updates this view.
-  - `Use Edit_Mute_Input`: Outputs the (edited) text from current node, mutes input node.
+  - `Use_input`: Outputs the connected text, updates this view.
+  - `Use_edit_mute_Input`: Outputs the (edited) text from current node, mutes input node*. 
+
+    > *If the inputnode is forced to run (by e.g. 'randomize seed' or other connected output to that node), the input node still runs but the catcher ignores it. This can cause confusion on the term 'mute'. To fix this, I added a new option:*
+  - `Use_edit_BLOCK_inputnode`: Actively prevents the previous node from executing. Uses the widget text.
+
+  - `Use_statuscolor` toggle to visualy show selected mode on node header.(Green=Pass input, Yellow=Soft Mute, Red=Hard Block)"
 
 ------------------
 
 ### 2. "Preview Image - No Save (IMGNR)"
 
 - Default "Preview"-nodes store their file in the ``ComfyUI\temp`` directory, before displaying it to the user. On reload of the page, the image is gone for the client, but it remains in the temp directory on the ComfyUI server. As this directory gets cleared upon ***next launch*** of the ComfyUI instance, the node isnt behaving like an actual disposable preview. And when you dont own the server, you have no influence on those cleanups.
-- "Preview Image - No Save (IMGNR)" does not create the file on disk; instead it sends it directly to the client, that loads it in the browser cache. On reload of the page, or when the next prompt is run, the preview is gone forever.
-You can opt to connect other image nodes for further processing that you *do* want to save.
+- **"Preview Image - No Save (IMGNR)"** does not create the file on disk; instead it sends it directly to the your screen. On reload of the page, or when the next prompt is run, the preview is gone into the abyss
+  - You can opt to connect other image nodes for further processing that you *do* want to save.
+  - Added toggle to Resize node to fit the image *OR*` Scale imagesize to fit the node, whichever you prefer
+
 
 **And... why is this useful?**
 
@@ -71,8 +77,27 @@ Don't you hate it when you open a workflow from CivitAI, Openart.ai, Reddit or w
 
 | | |
 | :-------------: | :-------------: | 
-| ![UMightHaveANodeForThat](img/UMightHaveANodeForThat_1.png) |  ![UMightHaveANodeForThat](img/UMightHaveANodeForThat_2.png) |
+| ![UMightHaveANodeForThat_1](img/UMightHaveANodeForThat_1.png) |  ![UMightHaveANodeForThat_2](img/UMightHaveANodeForThat_2.png) |
 | *RightClick on an an existing or missing node, listed on the bottom* | *popup with ranked list of matching (installed) nodes* |
+
+------------------
+
+### 4. "Txt2Combo (IMGNR) Autonodes"
+
+Small utility node that enables you to easily create and use lists as selector lists. I was frustrated by the use of list nodes where you cant actually select the value, but have to select an index (starting at 0 for the first). Also, some nodes i use have items i keep having to type manually.
+This set of nodes enables you to create lists of string values and select them from that list. On startup of ComfyUI it creates the nodes for the lists you've created in the User/IMGNR-Utils/Txt2Combo directory. 
+
+| Txt2Combo in NodeBrowser (blue) | Txt2Combo Node |
+| :-------------: | :-------------: | 
+| ![Txt2Combo_1](img/Txt2Combo_1.png) |  ![Txt2Combo_2](img/Txt2Combo_2.png) |
+| *You can find the dynamically created nodes in de Nodebrowser under IMGNR > Utils* | *Automatically created Example Nodes* |
+
+| Txt2Combo Writer Node (Green, above) |
+| :-------------: |
+| ![Txt2Combo_3](img/Txt2Combo_3.png) |
+| <ul align="left"><li> *You can create or update files in `Txt2Combo writer` node (green), Or manually editing the files outside of ComfyUI.*</li><li> *Use `populate`(Yellow) to populate the textbox with a selected existing file.*</li><li> *Or use `inspect` to connect to any existing combobox and populate its values.*<br> *(Very handy to filter longer combos to just the combos you need)*</li><li> *Press `R` on node after edit to refresh the Text2combo node (Orange) values.*</li><li> *New files require restart of ComfyUI server to create the new node* </ul>|
+
+> *Due to heavy inspiration of code in the `String Outputlist` node in the [ComfyUI Outputlists Combiner by Gerold Mesinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner), the Txt2Combo Node and code is licensed under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.txt).*
 
 ------------------
 
@@ -111,17 +136,21 @@ Don't you hate it when you open a workflow from CivitAI, Openart.ai, Reddit or w
 - [Smart ComfyUI Gallery](https://github.com/biagiomaf/smart-comfyui-gallery) by Biagiomaf
 - [Custom Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) by Pythongosssss
 - [Inpaint Crop&Stitch](https://github.com/lquesada/ComfyUI-Inpaint-CropAndStitch) and [Interactive nodes](https://github.com/lquesada/ComfyUI-Interactive) by Luis Quesada
+- [ComfyUI Outputlists Combiner](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner) by Gerold Mesinger
 - [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer), Smooth BW Image to Vector made by me (Shameless self-plug)
 - Gemini AI
 
-## ChangeLog
+## ChangeLog *V2.2.0 (2026-01-08)*
 
-- *(2026-01-02)* V 2.0.0 Added new Utility: [UMightHaveANodeForThat](#3-u-might-have-a-node-for-that)
-- *(2026-01-03)* V 2.1.0 Fix menu-item showing up unwanted and added menu in ComfyUI Settings for tweaking search/matching
+| Version | Notable Changes |
+| :-------------: | :------------- | 
+| V1.0.0 | Initial Upload |
+| V2.0.0 | Added new Utility: [UMightHaveANodeForThat](#3-u-might-have-a-node-for-that) |
+| V2.1.0 | Fix menu-item showing up unwanted and added menu in ComfyUI Settings for tweaking search/matching |
+| V2.2.0 | Fix Issue [#3](https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils/issues/3), [#6](https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils/issues/6) <br> Tweaks on [Catch \& Edit Text (IMGNR)](#1-catch--edit-text-imgnr) and ["Preview Image - No Save (IMGNR)"](#2-preview-image---no-save-imgnr), <br> New Nodes: [4. "Txt2Combo (IMGNR) Autonodes"](#4-txt2combo-imgnr-autonodes), <br> Added Node Descriptions and tooltips. |
 
 ## To Do / Known Issues
 
-- [ ] Preview Image resizes when out of view
 - [ ] Probably not 100% compatible with nodes2.0
 - [ ] Deciding on if i want that
 - [ ] Coded partially with Gemini AI, so needs more tweaking / cleaning 
