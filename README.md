@@ -5,11 +5,9 @@
   - [2. "Preview Image - No Save (IMGNR)"](#2-preview-image---no-save-imgnr)
   - [3. "U Might Have A Node For That"](#3-u-might-have-a-node-for-that)
   - [4. "Txt2Combo (IMGNR) Autonodes"](#4-txt2combo-imgnr-autonodes)
-    - [Multi-Combo Support](#multi-combo-support)
-    - [Usage Note](#usage-note)
 - [Installation](#installation)
 - [Sources, Resources, Shoutouts, Love and Inspiration](#sources-resources-shoutouts-love-and-inspiration)
-- [ChangeLog *V2.2.0 (2026-01-09)*](#changelog-v220-2026-01-09)
+- [ChangeLog *V2.3.0 (2026-01-09)*](#changelog-v230-2026-01-09)
 - [To Do / Known Issues](#to-do--known-issues)
 - [Disclaimer](#disclaimer)
 
@@ -107,7 +105,7 @@ Small utility node that enables you to easily create and use lists as selector l
   | *Using `Txt2Combo Writer` to inspect and populate the `Txt2Combo Example` node to filter an extensive list for your favorites* |
   > *Due to heavy inspiration of the 'inspect' code in the `String Outputlist` node in the [ComfyUI Outputlists Combiner by Gerold Mesinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner), the Txt2Combo Node and code is licensed under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.txt).*
 
-#### Multi-Combo Support
+#### Multi-Combo Support <!-- omit from toc -->
 - You can create multiple dropdowns in a single node by using brackets `[]`.
 - Example Content: (Txt2Combo Cameras Example node)
   
@@ -129,7 +127,7 @@ console.log(1)
 
 - This will create a single node with two inputs ("Camera", "Lens") and two corresponding outputs.
     
-#### Usage Note 
+#### Usage Note <!-- omit from toc -->
 - Editing items inside existing sections only requires a Refresh (R)
 - Adding new files (Nodes) or `[Sections]` requires a Server Restart to update the node's output slots.
 
@@ -164,7 +162,7 @@ console.log(1)
 - [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer), Smooth BW Image to Vector made by me (Shameless self-plug)
 - Gemini AI
 
-## ChangeLog *V2.2.0 (2026-01-09)*
+## ChangeLog *V2.3.0 (2026-01-09)*
 
 | Version | Notable Changes |
 | :-------------: | :------------- |
