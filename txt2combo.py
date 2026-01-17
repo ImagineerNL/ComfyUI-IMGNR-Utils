@@ -2,6 +2,7 @@
 # Initial code
 # Due to heavy inspiration of code in the String Outputlist node by https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner,
 # the Txt2Combo Node and code is node is licensed under the GPL-3.0 license 
+# New: Multiple combos per node
 
 import os
 import folder_paths
@@ -116,7 +117,7 @@ class Txt2ComboWriter:
     )
 
     FUNCTION = "process_file"
-    CATEGORY = "IMGNR/Utils"
+    CATEGORY = "IMGNR"
     OUTPUT_NODE = True
 
     def process_file(self, select_file, filename, content, mode, prompt=None, extra_pnginfo=None):
@@ -187,7 +188,7 @@ class Txt2ComboWriter:
 
 class Txt2ComboBase:
     FUNCTION = "select_text"
-    CATEGORY = "IMGNR/Utils"
+    CATEGORY = "IMGNR"
 
     # The logic is handled dynamically below, but we need a base execute
     def select_text(self, **kwargs):

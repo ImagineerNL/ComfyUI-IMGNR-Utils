@@ -69,7 +69,7 @@ class CatchEditTextNode:
     OUTPUT_TOOLTIPS = ("",)
     
     FUNCTION = "process_text"
-    CATEGORY = "IMGNR/Utils"
+    CATEGORY = "IMGNR"
     OUTPUT_NODE = True
     
     INPUT_IS_LIST = True

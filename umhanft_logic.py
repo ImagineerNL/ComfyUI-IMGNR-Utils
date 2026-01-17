@@ -1,3 +1,8 @@
+# IMGNR-Utils/UMHANFT
+# Fixes: Settings to general settings file IMGNR_settings.js
+# =========================================================
+# FEATURE: Dynamic Node alternative search
+
 import json, os, nodes, folder_paths, inspect
 from server import PromptServer
 from aiohttp import web
