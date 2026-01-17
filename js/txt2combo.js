@@ -1,7 +1,7 @@
-// IMGNR-Utils/Txt2Combo.py
-// Initial code
+// IMGNR-Utils/Txt2Combo
 // Due to heavy inspiration of code in the String Outputlist node by https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner,
-// the Txt2Combo Node and code is  licensed under the GPL-3.0 license  
+// the Txt2Combo Node and code is  licensed under the GPL-3.0 license 
+// New: Multiple combos per node 
 
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
