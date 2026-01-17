@@ -43,7 +43,7 @@ Adds a "Split Screen" toggle to the main toolbar, allowing you to view two indep
 
 ![Example SplitScreen](img/SplitScreen_1.png)
 
-<video src='img/SplitScreen.mp4' width=500/> [Example SplitScreen](img/SplitScreen.mp4)
+[Example SplitScreen Video](img/SplitScreen.mp4)
 
 ---
 
