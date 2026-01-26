@@ -1,11 +1,15 @@
 # IMGNR-Utils/Txt2Combo.py
-# Initial code
-# Due to heavy inspiration of code in the String Outputlist node by https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner,
+# # Due to heavy inspiration of code in the String Outputlist node by https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner,
 # the Txt2Combo Node and code is node is licensed under the GPL-3.0 license 
 # New: Multiple combos per node
+# New: Extended with Lookup Table functionality & Security Fixes & Save Button
 
 import os
 import folder_paths
+import re
+import json
+from server import PromptServer
+from aiohttp import web
 
 # --- SETUP PATHS ---
 comfy_user_dir = folder_paths.get_user_directory()
@@ -16,6 +20,9 @@ if not os.path.exists(target_dir):
         os.makedirs(target_dir, exist_ok=True)
     except Exception as e:
         print(f"[Txt2Combo] Error creating directory: {e}")
+
+# --- GLOBAL REGISTRY FOR API SECURITY ---
+CLASS_TO_FILE_MAP = {}
 
 # --- UTILITY: THE "ALWAYS VALID" WILDCARD ---
 class AnyType(str):
@@ -28,47 +35,175 @@ class AnyType(str):
 
 ANY = AnyType("*")
 
+# --- HELPER: TYPE CONVERSION ---
+def parse_type_def(header_part):
+    clean_part = header_part.strip()
+    col_name = clean_part
+    col_type = "STRING"
+    default_val = ""
 
-# --- HELPER: CREATE DEFAULTS ---
-def create_file_if_missing(filename, content_list):
-    file_path = os.path.join(target_dir, filename)
-    if not os.path.exists(file_path):
+    if "=" in clean_part:
+        name_str, type_str = clean_part.split("=", 1)
+        col_name = name_str.strip()
+        type_str = type_str.strip().lower()
+
+        if type_str == "int":
+            col_type = "INT"
+            default_val = 0
+        elif type_str == "float":
+            col_type = "FLOAT"
+            default_val = 0.0
+        elif type_str == "bool":
+            col_type = "BOOLEAN"
+            default_val = False
+
+    return col_name, col_type, default_val
+
+def convert_value(value_str, target_type):
+    value_str = value_str.strip()
+    if target_type == "INT":
         try:
-            with open(file_path, 'w', encoding='utf-8') as f:
-                f.write("\n".join(content_list))
-        except Exception as e:
-            print(f"[Txt2Combo] Error creating {filename}: {e}")
+            clean = value_str.replace(",", "").replace(".", "")
+            return int(float(value_str.replace(",", "."))) 
+        except:
+            try: return int(float(clean_val_float(value_str)))
+            except: return 0
+    elif target_type == "FLOAT":
+        try: return float(clean_val_float(value_str))
+        except: return 0.0
+    elif target_type == "BOOLEAN":
+        val = value_str.lower()
+        if val in ["true", "1", "yes", "on"]: return True
+        return False
+    return value_str
 
-create_file_if_missing("example.txt", ["example 1", "example 2", "example 3", "Values stored in User>IMGNR-Utils>Txt2Combo"])
-create_file_if_missing("cameras.txt", ["[Cameras]", "Canon", "Nikon", "Sony", "[Lens]", "Telephoto", "Portrait", "Wide-Angle", "70mm Prime"] )
+def clean_val_float(val):
+    val = val.replace(",", ".")
+    if val.count(".") > 1:
+        parts = val.split(".")
+        whole = "".join(parts[:-1])
+        decimal = parts[-1]
+        return f"{whole}.{decimal}"
+    return val
 
+# --- HELPER: FILE DEFAULTS ---
+def create_or_update_example(filename, content_list):
+    file_path = os.path.join(target_dir, filename)
+    try:
+        with open(file_path, 'w', encoding='utf-8') as f:
+            f.write("\n".join(content_list))
+    except Exception as e:
+        print(f"[Txt2Combo] Error writing example file {filename}: {e}")
+
+create_or_update_example("example.txt", [
+    "# Example node!! Will reset on launch!!",
+    "# Scroll down below list for more information",
+    "[Resolution]; [Width=int]; [Height=int]; [Ratio=float]",
+    "FullHD; 1920; 1080; 1.7778",
+    "4K; 3840; 2160; 1.7778",
+    "Square1080; 1080; 1080; 1.0",
+    "",
+    "[Format]",
+    "PNG",
+    "JPG",
+    "[Boolean=bool]",
+    "true",
+    "false",
+    "[Prefered Samplers]; [sampler]; [scheduler]",
+    "EulerSimple; euler; simple",
+    "EulerBeta; euler; beta",
+    "dpmpp_2m; dpmpp_2m; karras",
+    "lcm; lcm; normal",
+    "# ",
+    "# USAGE:",    
+    "# Files are stored in User>IMGNR-Utils>Txt2Combo",
+    "# Example Table: [Name=string]; [Width=int]; [Ratio=float]",
+    "# Default is String, Filename is Txt2Combo node name",
+    "# - First column is used for the dropdown.",
+    "# - Use ; to separate columns. Use [Section] for new sections in node",
+    "# - All columns become outputs",
+    "# - Supports =int, =float, =bool, =string (default)",
+    "# - Comments start with #",
+    "# ",
+    "# NOTES:",
+    "# Adding new files or [Sections] requires a Server Restart to update the node output slots.",
+    "# Editing items inside existing sections only requires a Refresh (R).",
+    "# You can find more examples in custom_nodes\ComfyUI-IMGNR-Utils\Txt2Combo_Examples.",
+    "# Copy them to User>IMGNR-Utils>Txt2Combo to edit and use."
+])
+
+# --- API ENDPOINTS ---
+
+@PromptServer.instance.routes.get("/imgnr/txt2combo/get_node_data")
+async def get_node_data(request):
+    class_name = request.rel_url.query.get("class_name", "")
+    if class_name in CLASS_TO_FILE_MAP:
+        filename = CLASS_TO_FILE_MAP[class_name]
+        full_path = os.path.join(target_dir, filename)
+        if os.path.exists(full_path):
+            try:
+                with open(full_path, "r", encoding="utf-8") as f:
+                    content = f.read()
+                return web.json_response({"filename": filename, "content": content})
+            except Exception as e:
+                return web.Response(status=500, text=str(e))
+    return web.Response(status=404, text="Node config not found")
+
+@PromptServer.instance.routes.post("/imgnr/txt2combo/save")
+async def save_txt_combo(request):
+    try:
+        data = await request.json()
+        filename = data.get("filename", "").strip()
+        content = data.get("content", "")
+        mode = data.get("mode", "populate") 
+        
+        # 1. Sanitize
+        final_filename = re.sub(r'[^\w\-. ]', '', filename)
+        if not final_filename: 
+            return web.json_response({"success": False, "message": "Invalid filename"})
+            
+        if not final_filename.lower().endswith(".txt"):
+            final_filename += ".txt"
+
+        full_path = os.path.abspath(os.path.join(target_dir, final_filename))
+        if not full_path.startswith(os.path.abspath(target_dir)):
+            return web.json_response({"success": False, "message": "Path traversal detected"})
+
+        # 2. Check Existing
+        is_new_file = not os.path.exists(full_path)
+        
+        # 3. Write
+        write_mode = "w"
+        if mode == "append" and not is_new_file:
+            write_mode = "a"
+            
+        new_lines = [line.strip() for line in content.splitlines() if line.strip()]
+        text_to_write = "\n".join(new_lines)
+        
+        prefix = ""
+        if write_mode == "a":
+            # Check for newline need
+            with open(full_path, "r", encoding="utf-8") as f:
+                old = f.read()
+            if old and not old.endswith("\n"): prefix = "\n"
+
+        with open(full_path, write_mode, encoding="utf-8") as f:
+            f.write(prefix + text_to_write)
+            
+        return web.json_response({
+            "success": True, 
+            "is_new": is_new_file, 
+            "filename": final_filename,
+            "mode_used": "Append" if write_mode == "a" else "Overwrite"
+        })
+
+    except Exception as e:
+        return web.json_response({"success": False, "message": str(e)})
 
 # --- WRITER NODE ---
-
 class Txt2ComboWriter:
-    DESCRIPTION = """
-    Manage text lists for Txt2Combo nodes.
-    Txt2Combo nodes are created on Server (Re)Start
-    ComboList files are stored in User/IMGNR-Utils/Txt2Combo
-    Updated nodes during runtime need to be refreshed 
-    by pressing 'R' on the specific node
-
-    - Populate: Reads an existing file into the Text box.
-    - Append: Adds new items to the end of the selected file.
-    - Overwrite: Replaces the file content, cannot be undone!
-
-    Connect the 'inspect' output to almost any existing 
-    combobox to populate text box with values.
-    Very handy to filter longer combos to just the combos you need. 
-    'inspect' functionality is heavily inspired on the wonderful 
-    Outputlist-combiner by GeroldMeisinger
-
-    Multi-Combo Support:
-    You can create multiple dropdowns in a single node by using brackets `[]`.
-    Note: Adding new files or `[Sections]` requires a Server Restart to update the node's output slots. 
-    Editing items inside existing sections only requires a Refresh (R).
-    """
-
+    DESCRIPTION = "Manage text lists and lookup tables for Txt2Combo."
+    
     def __init__(self):
         pass
     
@@ -88,68 +223,56 @@ class Txt2ComboWriter:
                 "filename": ("STRING", {
                     "default": "my_new_list", 
                     "multiline": False,
-                    "tooltip": "Name of new Txt2Combo Node"
                 }),
                 "mode": (["overwrite", "append", "populate"], {
                     "default": "populate",
-                    "tooltip": "Populate: Read file. Append: Add to file. Overwrite: Replace!! file"
                 }),
                 "content": ("STRING", {
                     "default": "", 
                     "multiline": True, 
                     "dynamicPrompts": False,
-                    "tooltip": "List items. Use [Section Name] to create multiple combos."
+                    "tooltip": "Use ; to separate columns. Use [Section] for new tables."
                 }),
             },
-            "hidden": {
-                "prompt": "PROMPT", 
-                "extra_pnginfo": ""
-            },
+            "hidden": {"prompt": "PROMPT", "extra_pnginfo": ""},
         }
 
-    RETURN_TYPES = ("STRING", "STRING", ANY)
-    RETURN_NAMES = ("dbg_status", "dbg_output", "inspect")
-    
-    OUTPUT_TOOLTIPS = (
-        "debug info",
-        "debug info",
-        "Connect to any Dropdown/Combo on any node to auto-populate, then auto-disconnects"
-    )
-
+    RETURN_TYPES = (ANY,)
+    RETURN_NAMES = ("inspect",)
+    OUTPUT_TOOLTIPS = ("Connect to Txt2Combo node or ANY combobox to populate widget below",)
     FUNCTION = "process_file"
     CATEGORY = "IMGNR"
     OUTPUT_NODE = True
 
     def process_file(self, select_file, filename, content, mode, prompt=None, extra_pnginfo=None):
+        # This function handles the "Queue Prompt" execution to run the Txt2ComboWriter.
+        # It replicates the logic of the API for consistency if used in a workflow.
         
-        # Determine Filename
         if select_file != "Create New > Use Filename Below":
             final_filename = select_file
         else:
             final_filename = filename.strip()
+            final_filename = re.sub(r'[^\w\-. ]', '', final_filename)
             if not final_filename.lower().endswith(".txt"):
                 final_filename += ".txt"
 
-        full_path = os.path.join(target_dir, final_filename)
+        full_path = os.path.abspath(os.path.join(target_dir, final_filename))
         
-        # --- MODE: POPULATE ---
+        if not full_path.startswith(os.path.abspath(target_dir)):
+             return {"ui": {"text": [""]}, "result": ("*")}
+
         if mode == "populate":
             if os.path.exists(full_path):
                 try:
                     with open(full_path, "r", encoding="utf-8") as f:
                         file_content = f.read()
-                    status = f"Success: Populated from {final_filename}"
-                    print(f"[Txt2ComboWriter] {status}")
-                    return {
-                        "ui": { "text": [file_content] },
-                        "result": (status, file_content, "*")
-                    }
+                    return {"ui": { "text": [file_content] }, "result": ("*")}
                 except Exception as e:
-                    return {"ui": {"text": [""]}, "result": (f"Error: {e}", "", "*")}
+                    return {"ui": {"text": [""]}, "result": ("*")}
             else:
-                return {"ui": {"text": [""]}, "result": (f"File not found: {final_filename}", "", "*")}
+                return {"ui": {"text": [""]}, "result": ("*")}
 
-        # --- MODE: WRITE / APPEND ---
+        # Write/Append
         new_lines = [line.strip() for line in content.splitlines() if line.strip()]
         text_to_write = "\n".join(new_lines)
 
@@ -159,126 +282,169 @@ class Txt2ComboWriter:
                     with open(full_path, "r", encoding="utf-8") as f:
                         old_content = f.read()
                     prefix = "\n" if old_content and not old_content.endswith("\n") else ""
-                    
                     with open(full_path, "a", encoding="utf-8") as f:
                         f.write(prefix + text_to_write)
-                    action = "Appended to"
                 else:
                     with open(full_path, "w", encoding="utf-8") as f:
                         f.write(text_to_write)
-                    action = "Created"
-            else: # overwrite
+                msg = "Appended"
+            else: 
                 with open(full_path, "w", encoding="utf-8") as f:
                     f.write(text_to_write)
-                action = "Overwrote"
+                msg = "Overwrote"
 
-            status_msg = f"Success: {action} {final_filename}."
-            print(f"[Txt2ComboWriter] {status_msg}")
-
-            return {
-                "ui": { "text": [] },
-                "result": (status_msg, text_to_write, "*")
-            }
+            status_msg = f"Success: {msg} {full_path}"
+            print(f"[Txt2Combo Writer] {status_msg}")
+            
+            return {"ui": { "text": [] }, "result": ("*")}
 
         except Exception as e:
-            return {"ui": {"text": []}, "result": (f"Error: {e}", "", "*")}
+            return {"ui": {"text": []}, "result": ("*")}
 
 
-# --- DYNAMIC READER NODES ---
+# --- DYNAMIC READER NODE LOGIC ---
 
 class Txt2ComboBase:
-    FUNCTION = "select_text"
+    FUNCTION = "select_item"
     CATEGORY = "IMGNR"
 
-    # The logic is handled dynamically below, but we need a base execute
-    def select_text(self, **kwargs):
-        # Return values in the order of the keys (which matches output order)
-        return tuple(kwargs.values())
+    def select_item(self, **kwargs):
+        node_data = getattr(self, "node_data", {})
+        results = []
+        for section_key in self.section_order:
+            section_info = node_data.get(section_key)
+            if not section_info: continue
 
-def parse_file_sections(file_path):
-    """
-    Parses a file into a dictionary of sections.
-    Format:
-    [Section1]
-    item1
-    item2
-    [Section2]
-    item3
-    """
-    sections = {}
-    current_section = "text" # Default input name if no brackets found
-    
-    # Initialize default section
-    sections[current_section] = []
-
-    if os.path.exists(file_path):
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                lines = [line.strip() for line in f if line.strip()]
+            selected_value = kwargs.get(section_key, "")
+            found_row = None
+            for row in section_info['data_rows']:
+                if row[0] == selected_value:
+                    found_row = row
+                    break
             
-            for line in lines:
-                if line.startswith("[") and line.endswith("]"):
-                    # New Section Found
-                    current_section = line[1:-1] # Remove brackets
-                    if current_section not in sections:
-                        sections[current_section] = []
-                else:
-                    sections[current_section].append(line)
-        except Exception:
-            sections["Error"] = ["Error reading file"]
-    else:
-        sections["Error"] = ["File Missing"]
+            columns = section_info['columns']
+            if found_row:
+                for i, col_def in enumerate(columns):
+                    col_type = col_def[1]
+                    if i < len(found_row):
+                        val = convert_value(found_row[i], col_type)
+                    else:
+                        val = col_def[2] 
+                    results.append(val)
+            else:
+                for col_def in columns:
+                    results.append(col_def[2])
+        return tuple(results)
 
-    # Clean up: If we found sections, remove the default if it's empty
-    if len(sections) > 1 and not sections["text"]:
-        del sections["text"]
-        
-    return sections
+def parse_file_to_sections(file_path):
+    parsed = { "order": [], "sections": {} }
+    if not os.path.exists(file_path): return parsed
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+    except: return parsed
+
+    current_section_name = None
+    default_section = "text"
+    
+    for line in lines:
+        line = line.strip()
+        if not line: continue
+        if line.startswith("#"): continue 
+
+        if line.startswith("["):
+            parts = [p.strip() for p in line.split(";") if p.strip()]
+            if parts[0].startswith("[") and parts[0].endswith("]"):
+                raw_header_1 = parts[0][1:-1]
+                col1_name, _, _ = parse_type_def(raw_header_1)
+                
+                current_section_name = col1_name
+                parsed["order"].append(current_section_name)
+                parsed["sections"][current_section_name] = {
+                    "columns": [], "dropdown_options": [], "data_rows": []
+                }
+                for p in parts:
+                    if p.startswith("[") and p.endswith("]"):
+                        parsed["sections"][current_section_name]["columns"].append(parse_type_def(p[1:-1]))
+                    else:
+                        parsed["sections"][current_section_name]["columns"].append(parse_type_def(p))
+                continue
+
+        if current_section_name is None:
+            current_section_name = default_section
+            parsed["order"].append(current_section_name)
+            parsed["sections"][current_section_name] = {
+                "columns": [(default_section, "STRING", "")],
+                "dropdown_options": [], "data_rows": []
+            }
+            
+        row_values = [v.strip() for v in line.split(";")]
+        if row_values:
+            parsed["sections"][current_section_name]["dropdown_options"].append(row_values[0])
+            parsed["sections"][current_section_name]["data_rows"].append(row_values)
+
+    return parsed
+
 
 def create_dynamic_node(filename_with_ext):
     file_path = os.path.join(target_dir, filename_with_ext)
+    parsed_data = parse_file_to_sections(file_path)
     
-    # 1. Parse File to get Structure
-    # We do this at Import time to define Return Names
-    sections = parse_file_sections(file_path)
-    section_keys = list(sections.keys())
+    if not parsed_data["order"]:
+        parsed_data = {
+            "order": ["Error"],
+            "sections": {
+                "Error": {
+                    "columns": [("Error", "STRING", "")],
+                    "dropdown_options": ["File Empty or Invalid"],
+                    "data_rows": [["File Empty or Invalid"]]
+                }
+            }
+        }
 
-    # 2. Define the INPUT_TYPES method dynamically
+    all_return_types = []
+    all_return_names = []
+    real_types_for_desc = []
+
+    for section_key in parsed_data["order"]:
+        sec = parsed_data["sections"][section_key]
+        for col in sec["columns"]:
+            all_return_names.append(col[0])
+            all_return_types.append(ANY) 
+            real_types_for_desc.append(col[1])
+
     def input_types_method(cls):
-        # Re-parse on input check (Allows "Refresh" to update values)
-        # Note: "Refresh" cannot update keys (Outputs) without restart
-        current_sections = parse_file_sections(file_path)
-        
+        current_data = parse_file_to_sections(file_path)
+        if not current_data["order"]:
+             return {"required": {"Error": (["Reload Node"],)}}
         inputs = {"required": {}}
-        for key in section_keys:
-            # Fallback if key missing in new file version
-            options = current_sections.get(key, ["missing_section"]) 
-            if not options: options = ["empty"]
-            
-            inputs["required"][key] = (options, {"default": options[0]})
-            
+        for key in current_data["order"]:
+            opts = current_data["sections"][key]["dropdown_options"]
+            if not opts: opts = ["None"]
+            inputs["required"][key] = (opts, {"default": opts[0]})
+        
+        inputs["optional"] = {"inspect": (ANY, {"tooltip": "Connect Txt2Combo Writer"})}
         return inputs
 
     safe_name = filename_with_ext.replace(".", "_").replace(" ", "_")
     internal_class_name = f"Txt2Combo_{safe_name}"
+    CLASS_TO_FILE_MAP[internal_class_name] = filename_with_ext
 
-    # 3. Create the Class
     DynamicClass = type(
         internal_class_name,
         (Txt2ComboBase,), 
         {
             "INPUT_TYPES": classmethod(input_types_method),
-            # Create ANY output for every section found
-            "RETURN_TYPES": (ANY,) * len(section_keys),
-            "RETURN_NAMES": tuple(section_keys),
-            "OUTPUT_TOOLTIPS": tuple([f"Output for {k}" for k in section_keys])
+            "RETURN_TYPES": tuple(all_return_types),
+            "RETURN_NAMES": tuple(all_return_names),
+            "OUTPUT_TOOLTIPS": tuple([f"{n} ({t})" for n, t in zip(all_return_names, real_types_for_desc)]),
+            "node_data": parsed_data["sections"],
+            "section_order": parsed_data["order"]
         }
     )
-
     return DynamicClass, internal_class_name
 
-
-# --- REGISTER NODES ---
 
 NODE_CLASS_MAPPINGS = {"Txt2ComboWriter": Txt2ComboWriter}
 NODE_DISPLAY_NAME_MAPPINGS = {"Txt2ComboWriter": "Txt2Combo Writer (IMGNR)"}

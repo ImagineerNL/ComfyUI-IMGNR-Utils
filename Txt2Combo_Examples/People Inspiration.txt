@@ -1,0 +1,172 @@
+# Example Standard Image Sizes.
+# Update or edit to your own desire.
+# Place in User>IMGNR-Utils>Txt2Combo to autoload the node on next server start.
+# Node name: Txt2Combo People Inspiration
+# ---------------------------------------------------
+[GenderStyle]
+female
+male 
+transgender
+gender neutral
+non-binary
+agender
+pangender
+genderqueer
+two-spirit
+third gender
+Android
+Furry
+# ---------------------------------------------------
+[Bodytype]
+adonis_belt, defined_abs, lean_waist, toned_chest
+amazon_body, tall, broad_shoulders, muscular_legs
+apple_shape, large_breasts, wide_waist, slender_legs
+athletic_build, six-pack, defined_pectorals, muscular_arms
+athletic_build, toned_abs, muscular_legs, defined_shoulders
+athletic_hourglass, defined_abs, muscular_thighs, broad_shoulders
+athletic, flat_chest, six-pack_abs, narrow_hips
+athletic, light_chest_hair, v-shape_torso, defined_calves
+average_build, medium_breasts, slight_curves, medium_frame
+average_build, slight_muscle_definition, medium_frame
+balanced_figure, proportional_bust_and_hips, defined_waist
+ballet_dancer_body, lean_muscle, long_limbs, graceful_physique
+bear_body, heavy_build, hairy_chest, thick_waist
+big_and_tall, large_frame, broad_shoulders, long_legs
+bodybuilder_build, huge_pectorals, bulging_biceps, vascular_arms
+bombshell_figure, extreme_hourglass, large_breasts, dramatic_curves
+brawler_build, thick_knuckles, strong_forearms, solid_torso
+chubby, large_breasts, soft_belly, wide_hips, cellulite
+chubby, soft_physique, rounded_belly, thick_thighs
+compact_build, dense_muscle, short_torso, strong_core
+compact_build, dense_muscle, toned_physique, short_torso
+crossfit_build, functional_muscle, defined_shoulders, strong_legs
+curvy_and_toned, medium_breasts, defined_waist, muscular_thighs
+curvy_body, medium_breasts, soft_stomach, thick_thighs
+dad_bod, soft_stomach, average_muscle, broad_frame
+defined_back_muscles, toned_shoulders, small_waist
+defined_muscles, tattoos, broad_shoulders, narrow_hips
+defined_waist, toned_abs, tattoos, medium_breasts
+delicate_frame, petite, slender_limbs, small_breasts
+ectomorph, lean_physique, fast_metabolism, lightly_muscled
+ectomorph, naturally_slim, lightly_muscled, fast_metabolism
+endomorph, soft_body, round_physique, wide_hips
+endomorph, soft_physique, curvy, round_features
+fighter_build, lean_and_strong, defined_back_muscles, toned_core
+fitness_model, six-pack, toned_legs, defined_back
+flexible_build, lean_muscle, long_limbs, graceful_physique
+heavy-set, large_frame, soft_muscle, wide_shoulders
+herculean_build, powerful_physique, massive_chest, thick_legs
+hourglass_figure, large_breasts, narrow_waist, wide_hips
+hourglass_figure, perky_breasts, toned_stomach, round_butt
+inverted_triangle, broad_shoulders, medium_breasts, narrow_hips
+lean_and_wiry, prominent_clavicle, thin_waist
+lean_build, toned_physique, light_muscle, narrow_waist
+lean_build, toned_stomach, hip_dips, slender_arms
+lean_muscle, visible_abs, toned_shoulders, hairy_legs
+lean, smooth_chest, toned_abs, slender_limbs
+lithe_body, flexible_physique, lean_muscle, slender
+mature_build, soft_curves, developed_figure, possible_scars
+mature_build, solid_frame, developed_muscles, possible_scars
+mesomorph, athletic_physique, well-defined_muscles, strong_legs
+mesomorph, naturally_athletic, defined_muscles, hourglass_potential
+modelesque, tall, slender, long_limbs, flat_stomach
+muscular_build, broad_shoulders, defined_abs, v-shape_torso
+muscular_but_lean, defined_serratus_anterior, low_body_fat
+muscular, hairy_chest, treasure_trail, defined_biceps
+natural_body, average_muscle, healthy_body_fat, soft_curves
+natural_build, moderate_muscle, healthy_body_fat_percentage
+otter_body, slim_but_toned, light_body_hair
+pear_shape, small_breasts, defined_waist, large_butt
+pear_shape, toned_arms, flat_stomach, very_wide_hips
+petite_and_curvy, small_frame, large_breasts, wide_hips
+petite, lean_physique, small_frame, toned_arms
+powerful_build, muscular, broad_shoulders, thick_legs
+powerlifter_build, thick_core, massive_legs, broad_back
+ripped, clear_muscle_separation, vascular, six-pack
+runner_body, slender_legs, lean_torso, minimal_body_fat
+runner_build, lean_legs, slender_torso, minimal_body_fat
+sculpted_physique, chiseled_abs, defined_pectorals, toned_obliques
+sculpted_physique, defined_obliques, toned_butt, muscular_arms
+shredded, extremely_low_body_fat, visible_muscle_fibers
+skinny_build, slender, no_visible_abs, narrow_shoulders
+skinny-fat, slender_arms, soft_midsection, undefined_muscle
+slender_build, small_breasts, flat_stomach, narrow_hips
+slender, long_legs, thigh_gap, prominent_clavicle
+slim_athletic, toned_but_not_bulky, agile_physique
+slim_build, narrow_chest, thin_arms, flat_stomach
+slim_curvy, slender_frame, medium_breasts, noticeable_hips
+slim-thick, narrow_waist, large_butt, thick_thighs
+soft_abs, average_physique, slight_love_handles
+soft_and_curvy, large_breasts, rounded_belly, smooth_skin
+soft_body, medium_breasts, slight_belly, stretch_marks
+solid_build, medium_breasts, strong_legs, wide_back
+solid_build, wide_chest, thick_arms, average_body_fat
+stocky_build, thick_arms, broad_chest, powerful_legs
+stocky, hairy_arms, thick_neck, solid_build
+strong_core, toned_legs, medium_breasts, defined_arms
+strongman_build, thick_torso, barrel_chest, immense_strength
+swimmer_body, broad_shoulders, lean_torso, strong_back
+swimmer_build, broad_shoulders, lean_torso, strong_back
+tall_and_slender, long_legs, small_breasts, narrow_waist
+thick_build, large_breasts, wide_hips, powerful_legs
+toned_build, defined_arms, flat_stomach, visible_muscle
+toned_physique, defined_abs, muscular_arms, low_body_fat
+toned, chest_hair, defined_obliques, muscular_thighs
+voluptuous, large_breasts, wide_hips, soft_physique
+well-built, defined_chest, strong_arms, flat_abs
+wiry_build, lean_muscle, low_body_fat, defined_arms
+wolf_body, lean_and_toned, moderate_body_hair, agile_frame
+youthful_build, lean, less_defined_curves, smooth_skin
+youthful_build, lean, less_defined_muscle, smooth_skin
+# ---------------------------------------------------
+[Facial Features]
+deep_blue_eyes, roman_nose, high_cheekbones
+hazel_eyes, button_nose, dimples
+light_green_eyes, wide_nose, freckles, freckled_cheeks
+dark_brown_eyes, almond_shaped_eyes, upturned_nose, round_cheeks
+grey_eyes, fleshy_nose, smooth_cheeks
+amber_eyes, nubian_nose, prominent_cheekbones
+pale_blue_eyes, round_eyes, greek_nose, rosy_cheeks
+deep_green_eyes, hawk_nose, sculpted_cheeks
+blue_eyes, heterochromia, wide_nose, fleshy_nose, full_cheeks
+black_eyes, button_nose, upturned_nose, angular_face
+grey_green_eyes, crooked_nose, freckles, freckled_cheeks
+light_blue_eyes, small_nose, straight_nose, hollow_cheeks
+brown_eyes, hooked_nose, warm-toned_skin
+light_brown_eyes, long_nose, narrow_nose, defined_cheekbones
+dark_grey_eyes, monolids, button_nose, soft_cheeks
+deep-set_eyes, brown_eyes, wide_nose, flat_nose, sun-kissed
+bright_blue_eyes, upturned_eyes, straight_nose, high_cheekbones, sharp_cheekbones
+hazel_eyes, almond_shaped_eyes, wide_nose, clear_skin
+light_amber_eyes, small_nose, upturned_nose, blush
+blue_grey_eyes, broad_nose, dimples
+dark_green_eyes, aristocratic_nose, sculpted_cheekbones
+sea_green_eyes, round_eyes, roman_nose, freckles, freckled_cheeks
+deep_brown_eyes, nubian_nose, full_cheeks, youthful
+icy_blue_eyes, aquiline_nose, pale_skin
+light_hazel_eyes, straight_nose, wide_nose, blushing
+light_grey_eyes, broad_nose, strong_cheekbones
+pale_green_eyes, small_nose, straight_nose, delicate_features
+dark_brown_eyes, long_eyelashes, aquiline_nose, contoured_cheeks
+bright_amber_eyes, roman_nose, golden_skin
+steel_blue_eyes, button_nose, rosy_cheeks
+brown_eyes, golden_eyes, wide_nose, full_cheeks
+grey_blue_eyes, color-changing_eyes, upturned_nose, faint_freckles
+dark_brown_eyes, fleshy_nose, glowing_skin
+bright_green_eyes, nubian_nose, defined_cheekbones, high_cheekbones
+light_blue_eyes, almond_shaped_eyes, greek_nose, freckles
+deep-set_eyes, hazel_eyes, wide_nose, fleshy_nose, angular_face
+dark_blue_eyes, violet_eyes, button_nose, upturned_nose, sculpted_cheeks
+light_green_eyes, round_eyes, hawk_nose, blush
+dark_brown_eyes, expressive_eyes, crooked_nose, prominent_cheekbones, round_cheeks
+grey_eyes, ringed_eyes, small_nose, straight_nose, pale_skin
+piercing_eyes, dark_green_eyes, hooked_nose, high_cheekbones
+blue_eyes, grey_eyes, long_nose, narrow_nose, soft_cheeks
+amber_eyes, button_nose, dimples, glowing_skin
+light_blue_eyes, wide_nose, flat_nose, sharp_cheekbones
+hazel_eyes, color-changing_eyes, straight_nose, contoured_cheeks
+dark_brown_eyes, soulful_eyes, wide_nose, full_cheeks
+grey_green_eyes, small_nose, upturned_nose, freckles
+deep_blue_eyes, navy_blue_eyes, broad_nose, high_cheekbones, highlighted_skin
+hazel_eyes, aristocratic_nose, blush
+light_grey_eyes, roman_nose, hollow_cheeks

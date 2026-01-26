@@ -1,0 +1,19 @@
+# Example Compatible Sampler Scheduler combos.
+# Based on https://civitai.com/articles/16231/sampler-and-scheduler-reference-for-hi-dream-flux-sdxl-illustrious-and-pony
+# Update or edit to your own desire.
+# Place in User>IMGNR-Utils>Txt2Combo to autoload the node on next server start.
+# Node name: Txt2Combo SamplerSchedulerCombos
+[Sampler]
+euler
+euler_ancestral
+heun
+lms
+ddim
+[Scheduler]
+simple
+karras
+ddim_uniform
+beta
+normal
+bong_tangent
+beta57

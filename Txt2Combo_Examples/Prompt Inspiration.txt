@@ -1,0 +1,160 @@
+# Example Standard Image Sizes.
+# Update or edit to your own desire.
+# Place in User>IMGNR-Utils>Txt2Combo to autoload the node on next server start.
+# Node name: Txt2Combo Prompt Inspiration
+# ---------------------------------------------------
+[PhotoStyle]
+portrait, headshot, bokeh, soft_lighting, studio, model, close-up
+landscape, scenic, mountains, ocean, sunset, wide_angle, nature
+street_photography, candid, urban, city, people, black_and_white, documentary
+fashion, model, haute_couture, runway, editorial, studio_lighting, designer_clothes
+wildlife_photography, animals, nature, telephoto_lens, safari, birdwatching, mammal
+macro, close-up, insects, flowers, details, shallow_depth_of_field, texture
+astrophotography, stars, milky_way, night_sky, long_exposure, nebula, telescope
+architectural, building, cityscape, lines, perspective, modern, historical
+food_photography, delicious, plating, flat_lay, natural_light, restaurant, ingredients
+sports_photography, action, fast_shutter_speed, stadium, athlete, competition, motion_blur
+photojournalism, documentary, news, event, candid, storytelling, conflict
+conceptual, abstract, surreal, fine_art, symbolism, composite, thought-provoking
+fine_art_nude, artistic_nude, human_form, black_and_white, shadows, body_scape
+underwater_photography, ocean, fish, coral_reef, scuba_diving, marine_life, waterproof_housing
+aerial_photography, drone, bird's-eye_view, landscape, cityscape, top-down
+monochrome, black_and_white, contrast, shadows, texture, classic, film_noir
+wedding_photography, bride, groom, ceremony, reception, couple, candid_moments
+newborn_photography, baby, infant, sleeping, props, soft_lighting, studio
+product_photography, commercial, e-commerce, white_background, studio_lighting, clean
+travel_photography, culture, landmark, landscape, street, people, adventure
+concert_photography, live_music, on_stage, band, low_light, crowd, performance
+still_life, inanimate_object, composition, lighting, texture, classic, arrangement
+infrared_photography, surreal, false_color, white_foliage, dreamlike, ir_filter
+pinhole_photography, lo-fi, lensless, long_exposure, soft_focus, experimental
+lomography, lomo, toy_camera, light_leaks, cross-processing, vignetting, saturated_colors
+minimalism, simple, clean_lines, negative_space, geometric, abstract
+abstract_photography, texture, patterns, color, light, form, non-representational
+golden_hour, sunset, sunrise, warm_light, long_shadows, landscape, portrait
+blue_hour, dusk, dawn, deep_blue_sky, city_lights, serene, moody
+high-speed_photography, freezing_motion, water_splash, explosion, fast_shutter, flash
+long_exposure, motion_blur, light_trails, waterfalls, night_sky, tripod, nd_filter
+double_exposure, multiple_exposure, composite, silhouette, surreal, in-camera_effect
+hdr, high_dynamic_range, bracketed_exposures, vivid_colors, details_in_shadows_and_highlights
+panorama, stitched_photo, wide_view, landscape, cityscape, panoramic_head
+candid_photography, unposed, natural, documentary, street, event
+event_photography, party, conference, celebration, candid, group_photo
+real_estate_photography, interior, exterior, wide-angle_lens, property, architecture
+boudoir_photography, intimate, sensual, lingerie, bedroom, soft_lighting
+gothic, dark, moody, shadows, architecture, cemetery, dramatic
+vintage, retro, film_grain, sepia, old-fashioned, classic_car, nostalgia
+cinematic, widescreen, moody_lighting, storytelling, film_still, anamorphic_look
+light_painting, long_exposure, flashlight, led, dark, creative, abstract
+forced_perspective, optical_illusion, creative, fun, landmark, playing_with_scale
+mobile_photography, smartphone, iphoneography, androidography, editing_apps, on_the_go
+film_photography, analog, 35mm, medium_format, film_grain, light_leaks, developing
+urbex, abandoned_places, decay, derelict, gritty, documentary
+pet_photography, dog, cat, animals, portrait, outdoor, studio
+tilt-shift, miniature_faking, selective_focus, diorama_effect, cityscape, landscape
+silhouette, sunset, sunrise, backlight, contrast, dark_subject, bright_background
+glamour, model, beauty, polished, studio, professional_makeup, elegant
+# ---------------------------------------------------
+[ArtStyle]
+impressionism, visible_brushstrokes, light, landscape, monet_style, plein_air
+post-impressionism, vibrant_colors, emotional, symbolic, van_gogh_style, pointillism
+cubism, geometric_shapes, abstract, fragmented, multiple_viewpoints, picasso_style
+surrealism, dreamlike, bizarre, subconscious, dali_style, melting_objects
+abstract_expressionism, non-representational, drip_painting, gestural, pollack_style, large_canvas
+pop_art, bright_colors, comic_book_style, consumerism, warhol_style, ben-day_dots
+art_nouveau, decorative, flowing_lines, organic_forms, floral_patterns, mucha_style
+art_deco, geometric, symmetrical, streamlined, glamorous, 1920s
+renaissance, realism, religious, portrait, classical, leonardo_da_vinci_style
+baroque, dramatic, chiaroscuro, ornate, emotional, caravaggio_style
+rococo, elegant, pastel_colors, playful, aristocratic, fragonard_style
+neoclassicism, classical_antiquity, order, reason, historical, jacques-louis_david_style
+romanticism, emotion, nature, sublime, dramatic, turner_style
+realism, everyday_life, detailed, accurate_representation, unidealized, courbet_style
+fauvism, intense_color, non-representational_color, bold_brushwork, matisse_style
+expressionism, distorted, emotional, subjective, angst, munch_style
+dada, anti-art, absurd, collage, ready-made, duchamp_style
+futurism, speed, technology, motion, dynamic, boccioni_style
+constructivism, geometric_abstraction, social_purpose, utilitarian, rodchenko_style
+minimalism, simple, geometric_forms, industrial_materials, non-expressive, judd_style
+photorealism, hyperrealism, detailed, airbrush, glossy, estes_style
+ukiyo-e, woodblock_print, japanese_art, flat_colors, hokusai_style, edo_period
+pointillism, dots, optical_mixing, seurat_style, neo-impressionism
+symbolism, mythological, dreamlike, spiritual, mysterious, moreau_style
+gothic_art, religious, stained_glass, pointed_arches, manuscript_illumination, medieval
+byzantine_art, religious, mosaics, gold_background, icons, flat_perspective
+street_art, graffiti, stencil, mural, urban, banksy_style
+anime_style, manga, large_eyes, stylized_hair, cell_shading, japanese_animation
+cartoon, cel_shading, thick_outlines, simplified_features, exaggerated, looney_tunes_style
+concept_art, character_design, environment_design, digital_painting, video_game_art, sci-fi
+pixel_art, 8-bit, 16-bit, retro, video_game, limited_palette
+psychedelic_art, vibrant_colors, swirling_patterns, trippy, 1960s, surreal
+steampunk, victorian, gears, clockwork, goggles, retrofuturism
+cyberpunk, futuristic, neon, dystopian, high_tech_low_life, blade_runner_style
+fantasy_art, dragons, elves, magic, castles, mythical_creatures, frazetta_style
+sci-fi_art, futuristic, spaceship, aliens, planets, laser_gun, space_opera
+horror_art, macabre, grotesque, dark, monsters, blood, giger_style
+comic_book_style, ink, speech_bubble, panel, action_lines, superhero
+watercolor, translucent, wet-on-wet, washes, soft_edges, paper_texture
+oil_painting, rich_colors, impasto, blending, canvas_texture, traditional_media
+charcoal_sketch, charcoal, sketch, black_and_white, smudging, textured_paper, drawing
+ink_wash_painting, sumi-e, monochrome, minimalist, brushstrokes, zen
+digital_painting, digital_art, graphics_tablet, layers, cg_art, detailed
+vector_art, clean_lines, flat_colors, scalable, illustrator, graphic_design
+low_poly, geometric, faceted, 3d, minimalist, stylized
+chibi, cute, super_deformed, small_body, large_head, anime
+outsider_art, art_brut, raw, intuitive, untrained, unconventional
+op_art, optical_illusion, black_and_white, geometric_patterns, dizzying, bridget_riley_style
+kinetic_art, movement, sculpture, moving_parts, calder_style, mobile
+folk_art, traditional, naive, decorative, handcrafted, cultural
+# ---------------------------------------------------
+[RenderStyle]
+photorealistic, 8k, detailed, uhd, cinematic_lighting, sharp_focus
+anime_style, cel_shading, vibrant_colors, dynamic_lines, studio_ghibli_inspired
+watercolor, painterly, soft_edges, textured_paper, light_wash, transparent_layers
+oil_painting, impasto, thick_brushstrokes, classicism, textured_canvas, rich_colors
+concept_art, digital_painting, matte_finish, atmospheric, detailed_environment, gritty
+pixel_art, 8-bit, limited_palette, retro_gaming, isometric, dithering
+cartoon, bold_outlines, flat_colors, exaggerated_features, whimsical, 2d_animation_style
+charcoal_sketch, cross-hatching, rough_texture, monochrome, expressive, smudged
+3d_render, octane_render, physically-based_rendering, realistic_materials, global_illumination
+low_poly, flat_shading, geometric, minimalist, vibrant_colors, isometric_view
+comic_book_style, ink_lines, halftone_dots, dynamic_panels, screentones, graphic
+art_nouveau, intricate_lines, flowing_curves, decorative, organic_patterns, elegant
+impressionism, loose_brushstrokes, capturing_light, plein_air, soft_focus, vibrant_palette
+surrealism, dreamlike, bizarre, unexpected_juxtapositions, symbolic, subconscious
+gothic_art, dark, moody, intricate_details, high_contrast, ornate, dramatic_shadows
+cyberpunk, neon_lighting, futuristic, dystopian, high-tech, gritty_cityscape, rain
+steampunk, victorian_era, gears_and_cogs, brass_and_copper, retro-futuristic, intricate_machinery
+fantasy_art, magical, ethereal, detailed_armor, glowing_effects, mythical_creatures
+sci-fi_art, futuristic, spaceships, advanced_technology, sleek_design, alien_landscapes
+technical_drawing, blueprint, precise_lines, annotations, isometric_view, schematic
+vector_art, clean_lines, flat_colors, scalable, graphic_design, minimalist_icons
+line_art, monochrome, clean, simple, outlines, minimalist_drawing, single_line
+chalk_art, textured, pastel_colors, blackboard, dusty_effect, hand-drawn_lettering
+vintage_photography, sepia_tone, film_grain, light_leaks, faded_colors, scratched
+double_exposure, layered_images, surreal_portrait, abstract, transparent_overlay, silhouette
+macro_photography, extreme_close-up, shallow_depth_of_field, detailed_textures, bokeh
+long_exposure, light_trails, motion_blur, smooth_water, night_photography, star_trails
+infrared_photography, false_color, surreal_landscape, white_foliage, ethereal_glow
+tilt-shift_photography, miniature_effect, selective_focus, blurred_edges, diorama
+glitch_art, databending, pixel_sorting, digital_artifacts, distorted_image, rgb_split
+vaporwave, retro_aesthetic, pink_and_cyan, roman_statues, 80s_vibe, grid_pattern
+pop_art, bold_colors, repetition, andy_warhol_style, graphic, screen_printing_effect
+cubism, geometric_shapes, multiple_viewpoints, abstract, fragmented_objects, collage-like
+pointillism, dots, optical_mixing, seurat_style, vibrant, pixelated_painting
+minimalist_art, simple_forms, clean, negative_space, limited_color_palette, geometric_abstraction
+abstract_expressionism, non-representational, gestural_brushstrokes, expressive, large_canvas, drips
+street_art, graffiti, stencil, spray_paint, urban, bold_lettering, mural
+ukiyo-e, japanese_woodblock_print, flat_areas_of_color, bold_outlines, historical_japan
+stained_glass, vibrant_colors, lead_lines, translucent, decorative_window, gothic_style
+mosaic, small_tiles, tessellation, textured_surface, pixelated_image, colorful_pattern
+collage, mixed_media, cut-and-paste, assembled, layered_textures, photomontage
+claymation, stop-motion, plasticine, sculpted_characters, textured, finger-prints_visible
+cel_shading, anime, cartoon_look, flat_colors, ink_outlines, 3d_to_2d
+pen_and_ink, hatching, fine_lines, stippling, engraving_style, detailed_linework, monochrome
+chiaroscuro, high_contrast, dramatic_light_and_shadow, deep_shadows, caravaggio_style, moody
+cinematic_shot, widescreen, anamorphic_lens_flare, dramatic_lighting, film_grain, color_graded
+fisheye_lens, distorted_perspective, ultra_wide_angle, spherical_view, immersive, curved_lines
+dutch_angle, tilted_camera, dynamic_composition, unsettling, cinematic, off-kilter
+bokeh, blurred_background, shallow_depth_of_field, soft_light_orbs, portrait_photography, dreamy
+isometric_art, 2.5d, pixel_art_style, game_asset, technical_illustration, clean_lines
