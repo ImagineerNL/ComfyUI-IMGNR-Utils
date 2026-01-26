@@ -3,6 +3,7 @@
 # Fixes: Widget background now same as template node color
 # Fixes: Zero size widget on spawn due to no image (using placeholder)
 # New: Adhoc Save Node
+# Updated: Renamed Sequence to Counter & Added Toggle
 
 import os
 import torch
@@ -18,7 +19,7 @@ from aiohttp import web
 import folder_paths
 
 # --- UTILITY: SAVE FUNCTION ---
-def save_image_to_disk(image_data_base64, filename_main, sequence, filename_extras, overwrite, embed_workflow=False, prompt=None, extra_pnginfo=None, output_dir=""):
+def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, filename_extras, overwrite, embed_workflow=False, prompt=None, extra_pnginfo=None, output_dir=""):
     try:
         # 1. Decode Image
         if "," in image_data_base64:
@@ -36,7 +37,6 @@ def save_image_to_disk(image_data_base64, filename_main, sequence, filename_extr
                     metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
         # 3. Construct Filename
-        seq_str = f"{int(sequence):05d}"
         extras_str = f"_{filename_extras}" if filename_extras and filename_extras.strip() else ""
         
         full_output_dir = folder_paths.get_output_directory()
@@ -54,19 +54,26 @@ def save_image_to_disk(image_data_base64, filename_main, sequence, filename_extr
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-        # Base Filename (without extension) for output
-        base_filename_no_ext = f"{filename_part}_{seq_str}{extras_str}"
+        # LOGIC: Add Counter or Not?
+        if add_counter:
+            counter_str = f"_{int(counter):05d}"
+            base_filename_no_ext = f"{filename_part}{counter_str}{extras_str}"
+        else:
+            # No counter in filename
+            base_filename_no_ext = f"{filename_part}{extras_str}"
+
         file_extension = ".png"
         full_file_path = os.path.join(save_path, base_filename_no_ext + file_extension)
 
         # 4. Handle Overwrite
         if os.path.exists(full_file_path) and not overwrite:
-            counter = 1
+            safety_idx = 1
             while os.path.exists(full_file_path):
-                new_base = f"{base_filename_no_ext}_{counter:03d}"
+                new_base = f"{base_filename_no_ext}_{safety_idx:03d}"
                 full_file_path = os.path.join(save_path, new_base + file_extension)
-                base_filename_no_ext = new_base 
-                counter += 1
+                # We do not update base_filename_no_ext here for the return value, 
+                # effectively keeping the "intended" name, but saving as a safe variant.
+                safety_idx += 1
 
         # 5. Save
         img.save(full_file_path, pnginfo=metadata, compress_level=4)
@@ -74,21 +81,25 @@ def save_image_to_disk(image_data_base64, filename_main, sequence, filename_extr
         # 6. Return Data
         relative_path = os.path.relpath(full_file_path, folder_paths.get_output_directory())
         
-        return True, full_file_path, relative_path, int(sequence) + 1, base_filename_no_ext
+        # Increment counter ONLY if add_counter was active
+        next_counter = int(counter) + 1 if add_counter else int(counter)
+        
+        return True, full_file_path, relative_path, next_counter, base_filename_no_ext
 
     except Exception as e:
         print(f"Save Error: {e}")
-        return False, str(e), "", sequence, ""
+        return False, str(e), "", counter, ""
 
 # --- API: MANUAL SAVE ---
 @PromptServer.instance.routes.post("/imgnr/save_manual")
 async def imgnr_save_manual(request):
     data = await request.json()
     
-    success, full_path, rel_path, new_seq, base_name = save_image_to_disk(
+    success, full_path, rel_path, new_cnt, base_name = save_image_to_disk(
         image_data_base64=data.get("image"),
         filename_main=data.get("filename_main"),
-        sequence=data.get("sequence"),
+        counter=data.get("counter"),
+        add_counter=data.get("add_counter"),
         filename_extras=data.get("filename_extras"),
         overwrite=data.get("overwrite"),
         embed_workflow=False 
@@ -98,7 +109,7 @@ async def imgnr_save_manual(request):
         "success": success, 
         "message": full_path if success else rel_path, 
         "relative_path": rel_path,
-        "new_sequence": new_seq
+        "new_counter": new_cnt
     })
 
 # --- NODE 1: Preview No - Save ---
@@ -123,7 +134,7 @@ class PreviewImageBase64Node:
 
     def encode_preview(self, images, mask=None):
         res = PreviewImageAdHocSaveNode().run(
-            images, mask, filename_main="ComfyUI", sequence=1, 
+            images, mask, filename_main="ComfyUI", counter=1, add_counter=True,
             filename_extras="", autosave=False
         )
         return {"ui": res["ui"], "result": (res["result"][0], res["result"][1])}
@@ -133,10 +144,9 @@ class PreviewImageBase64Node:
 class PreviewImageAdHocSaveNode:
     DESCRIPTION = """
     Displays input images and allows Auto saving or Manual saving _after_ image generation.
-    Allows Filename_main and Sequence in/out for master/clone syncing.
-    Structure: Filename_Sequence_Extras.png
-    E.g. Img_00001.png, Img_00001_detailer.png, IMG0001_SEEDVR2.png
-
+    Allows Filename_main and Counter in/out for master/clone syncing.
+    Structure: Filename_00001_Extras.png (if Add Counter is True)
+    Structure: Filename_Extras.png (if Add Counter is False)
     """
 
     @classmethod
@@ -145,7 +155,8 @@ class PreviewImageAdHocSaveNode:
             "required": {
                 "images": ("IMAGE", ),
                 "filename_main": ("STRING", {"default": "ComfyUI"}),
-                "sequence": ("INT", {"default": 1, "min": 0, "max": 999999, "step": 1}),
+                "counter": ("INT", {"default": 1, "min": 0, "max": 999999, "step": 1}),
+                "add_counter": ("BOOLEAN", {"default": True}),
                 "filename_extras": ("STRING", {"default": ""}),
                 "autosave": ("BOOLEAN", {"default": False}),
                 "embed_workflow": ("BOOLEAN", {"default": True}), 
@@ -158,7 +169,7 @@ class PreviewImageAdHocSaveNode:
         }
 
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "INT", "STRING")
-    RETURN_NAMES = ("image", "mask", "filename_main", "sequence_out", "full_filename")
+    RETURN_NAMES = ("image", "mask", "filename_main", "counter_out", "full_filename")
     FUNCTION = "run"
     OUTPUT_NODE = True 
     CATEGORY = "IMGNR"
@@ -191,26 +202,31 @@ class PreviewImageAdHocSaveNode:
         
         return output_images, output_mask
 
-    def run(self, images, mask=None, filename_main="ComfyUI", sequence=1, filename_extras="", autosave=False, embed_workflow=False, overwrite=False, prompt=None, extra_pnginfo=None):
+    def run(self, images, mask=None, filename_main="ComfyUI", counter=1, add_counter=True, filename_extras="", autosave=False, embed_workflow=False, overwrite=False, prompt=None, extra_pnginfo=None):
         ui_payload = []
-        current_seq = sequence
+        current_cnt = counter
         saved_rel_path = None 
         
-        # Calculate expected filename string
-        seq_str = f"{int(current_seq):05d}"
+        # Calculate expected filename string for UI display
         extras_str = f"_{filename_extras}" if filename_extras and filename_extras.strip() else ""
         
         if "/" in filename_main or "\\" in filename_main:
              _, fname_part = os.path.split(filename_main)
-             full_filename_str = f"{fname_part}_{seq_str}{extras_str}"
+             base_part = fname_part
         else:
-             full_filename_str = f"{filename_main}_{seq_str}{extras_str}"
+             base_part = filename_main
+
+        if add_counter:
+            cnt_str = f"_{int(current_cnt):05d}"
+            full_filename_str = f"{base_part}{cnt_str}{extras_str}"
+        else:
+            full_filename_str = f"{base_part}{extras_str}"
 
         rgba_images, output_mask = self.prepare_rgba(images, mask)
 
         if rgba_images is None:
              empty = torch.zeros([1, 64, 64, 3])
-             return {"ui": {"imgnr_b64_previews": []}, "result": (empty, empty, filename_main, current_seq, "")}
+             return {"ui": {"imgnr_b64_previews": []}, "result": (empty, empty, filename_main, current_cnt, "")}
 
         try:
             pil_img = self.tensor_to_pil(rgba_images)
@@ -220,18 +236,18 @@ class PreviewImageAdHocSaveNode:
             data_uri = f"data:image/png;base64,{img_b64}"
             
             if autosave:
-                 _, _, saved_rel_path, next_seq, saved_base_name = save_image_to_disk(
-                     img_b64, filename_main, current_seq, filename_extras, overwrite, 
+                 _, _, saved_rel_path, next_cnt, saved_base_name = save_image_to_disk(
+                     img_b64, filename_main, current_cnt, add_counter, filename_extras, overwrite, 
                      embed_workflow, prompt, extra_pnginfo
                  )
-                 current_seq = next_seq
+                 current_cnt = next_cnt
                  full_filename_str = saved_base_name 
 
             ui_payload.append({
                 "image": data_uri,
                 "width": pil_img.width,
                 "height": pil_img.height,
-                "current_sequence": current_seq,
+                "current_counter": current_cnt,
                 "saved_filename": saved_rel_path 
             })
 
@@ -240,7 +256,7 @@ class PreviewImageAdHocSaveNode:
         
         return {
             "ui": {"imgnr_b64_previews": ui_payload}, 
-            "result": (rgba_images, output_mask, filename_main, current_seq, full_filename_str)
+            "result": (rgba_images, output_mask, filename_main, current_cnt, full_filename_str)
         }
 
 # --- REGISTER NODES ---

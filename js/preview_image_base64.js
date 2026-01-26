@@ -3,6 +3,7 @@
 // Fixes: Widget background now same as template node color
 // Fixes: Zero size widget on spawn due to no image (using placeholder)
 // New: Adhoc Save Node
+// Updated: Renamed Sequence to Counter
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
@@ -139,7 +140,7 @@ app.registerExtension({
 
                     // Button
                     const saveBtn = document.createElement("button");
-                    saveBtn.textContent = "💾 Save Now";
+                    saveBtn.textContent = "沈 Save Now";
                     Object.assign(saveBtn.style, { cursor: "pointer", fontSize: "12px", padding: "4px 10px", width: "90%" });
                     controls.appendChild(saveBtn);
                     
@@ -180,7 +181,8 @@ app.registerExtension({
                         const payload = {
                             image: data.uri,
                             filename_main: getVal("filename_main"),
-                            sequence: getVal("sequence"),
+                            counter: getVal("counter"),
+                            add_counter: getVal("add_counter"),
                             filename_extras: getVal("filename_extras"),
                             overwrite: getVal("overwrite")
                         };
@@ -190,8 +192,8 @@ app.registerExtension({
                             const result = await resp.json();
                             if (result.success) {
                                 saveBtn.textContent = "Saved!";
-                                const seqWidget = this.widgets.find(w => w.name === "sequence");
-                                if (seqWidget) seqWidget.value = result.new_sequence;
+                                const cntWidget = this.widgets.find(w => w.name === "counter");
+                                if (cntWidget) cntWidget.value = result.new_counter;
                                 this.savedFilename = result.relative_path;
                                 updateUIState();
                             } else {
@@ -200,10 +202,10 @@ app.registerExtension({
                         } catch (e) { saveBtn.textContent = "Error"; }
                         
                         setTimeout(() => { 
-                             if (!saveBtn.disabled) saveBtn.textContent = "💾 Save Now"; 
+                             if (!saveBtn.disabled) saveBtn.textContent = "沈 Save Now"; 
                              else if (saveBtn.disabled && !this.widgets.find(w => w.name === "autosave")?.value) {
-                                saveBtn.textContent = "💾 Save Now"; saveBtn.disabled = false;
-                             } else { saveBtn.textContent = "💾 Save Now"; }
+                                saveBtn.textContent = "沈 Save Now"; saveBtn.disabled = false;
+                             } else { saveBtn.textContent = "沈 Save Now"; }
                         }, 2000);
                     };
 
@@ -243,9 +245,9 @@ app.registerExtension({
                         this.properties["imgnr_persist_data"] = payload;
                         
                         if (isSaveNode) {
-                            if (info.current_sequence !== undefined) {
-                                const seqWidget = this.widgets.find(w => w.name === "sequence");
-                                if (seqWidget) seqWidget.value = info.current_sequence;
+                            if (info.current_counter !== undefined) {
+                                const cntWidget = this.widgets.find(w => w.name === "counter");
+                                if (cntWidget) cntWidget.value = info.current_counter;
                             }
                             this.savedFilename = info.saved_filename || null;
                             if (this.updateUIState) this.updateUIState();

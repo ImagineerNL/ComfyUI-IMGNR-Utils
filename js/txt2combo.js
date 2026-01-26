@@ -1,7 +1,7 @@
 // IMGNR-Utils/Txt2Combo
 // Due to heavy inspiration of code in the String Outputlist node by https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner,
 // the Txt2Combo Node and code is  licensed under the GPL-3.0 license 
-// New: Multiple combos per node 
+// Extended to support Lookup Tables, Reverse Inspection, and Direct Save Button
 
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
@@ -9,30 +9,16 @@ import { api } from "../../scripts/api.js";
 // Helper: Recursively search for a list of strings in the definition object
 function findValuesList(obj) {
     if (!obj) return null;
-    
-    // 1. Is the object ITSELF an array of strings?
-    // e.g. ["a", "b", "c"]
     if (Array.isArray(obj)) {
-        if (obj.length > 0 && typeof obj[0] === "string" && obj[0] !== "COMBO") {
-            return obj;
-        }
-        // If it's an array but not strings (e.g. mixed), search inside
+        if (obj.length > 0 && typeof obj[0] === "string" && obj[0] !== "COMBO") return obj;
         for (let item of obj) {
             let found = findValuesList(item);
             if (found) return found;
         }
     }
-    
-    // 2. Is it an object containing the list?
     if (typeof obj === "object") {
-        
-        // Check for standard "values" key
         if (obj.values && Array.isArray(obj.values)) return obj.values;
-        
-        // Check for "options" key (The fix for your specific error)
         if (obj.options && Array.isArray(obj.options)) return obj.options;
-
-        // Recursive search into other keys
         for (let key in obj) {
             if (typeof obj[key] === "object") {
                 let found = findValuesList(obj[key]);
@@ -63,60 +49,177 @@ app.registerExtension({
         }
     },
 
-    // 2. Inspect Mode (Frontend -> Frontend)
+    // 2. JS Logic (Inspect + Save Button)
     async nodeCreated(node) {
         if (node.comfyClass === "Txt2ComboWriter") {
+            
+            // --- A. INSPECT LOGIC ---
             const inspectSlot = node.outputs.findIndex(o => o.name === "inspect");
-            if (inspectSlot === -1) { return; }
+            if (inspectSlot !== -1) {
+                node.onConnectionsChange = async function (type, index, isConnected, linkInfo, self) {
+                    if (index !== inspectSlot || !isConnected || !linkInfo) return;
 
-            node.onConnectionsChange = async function (type, index, isConnected, linkInfo, self) {
-                if (index !== inspectSlot || !isConnected || !linkInfo) { return; }
+                    const targetNode = app.graph.getNodeById(linkInfo.target_id);
+                    if (!targetNode) return;
 
-                const targetNode = app.graph.getNodeById(linkInfo.target_id);
-                if (!targetNode) { return; }
+                    app.graph.removeLink(linkInfo.id);
 
-                // Disconnect immediately
-                app.graph.removeLink(linkInfo.id);
+                    const targetType = targetNode.type || targetNode.comfyClass || "";
+                    console.log(`[Txt2Combo] Inspecting Node Type: ${targetType}`);
 
-                const targetInputSlot = targetNode.inputs[linkInfo.target_slot];
-                const targetInputName = targetInputSlot.name;
-                const targetClassName = targetNode.comfyClass;
+                    // Reverse Load
+                    if (targetType.startsWith("Txt2Combo_")) {
+                        try {
+                            const response = await api.fetchApi(`/imgnr/txt2combo/get_node_data?class_name=${targetType}`);
+                            if (response.ok) {
+                                const data = await response.json();
+                                const filenameWidget = node.widgets.find(w => w.name === "filename");
+                                const contentWidget = node.widgets.find(w => w.name === "content");
+                                if (filenameWidget) filenameWidget.value = data.filename;
+                                if (contentWidget) contentWidget.value = data.content;
+                                console.log(`[Txt2Combo] Loaded content from ${data.filename}`);
+                            }
+                        } catch (e) { console.error(e); }
+                        return;
+                    }
 
-                console.log(`[Txt2Combo] Inspecting: ${targetClassName} -> ${targetInputName}`);
+                    // Standard Inspect
+                    const targetInputSlot = targetNode.inputs[linkInfo.target_slot];
+                    const targetInputName = targetInputSlot.name;
+                    if (targetInputName === "inspect") return;
+
+                    try {
+                        const info = await api.fetchApi(`/object_info/${targetType}`);
+                        const json = await info.json();
+                        let inputDef = json[targetType]?.input?.required?.[targetInputName] || json[targetType]?.input?.optional?.[targetInputName];
+                        
+                        if (inputDef) {
+                            let values = findValuesList(inputDef);
+                            if (values && values.length > 0) {
+                                const contentWidget = node.widgets.find(w => w.name === "content");
+                                if (contentWidget) contentWidget.value = values.map(String).join("\n");
+                            }
+                        }
+                    } catch (e) { console.error(e); }
+                };
+            }
+
+            // --- B. SAVE BUTTON ---
+            
+            // 1. Create Footer Container (Fixed Height)
+            const footerHeight = 60;
+            const footerHeight_padded = 75; // Padding needed to keep it from overflowing on bottom edge
+            const container = document.createElement("div");
+            container.className = "imgnr-txt2combo-controls";
+            Object.assign(container.style, {
+                width: "100%", 
+                height: `${footerHeight}px`,  
+                padding: "10px 5px 6px 5px",  
+                display: "flex", 
+                flexDirection: "column", 
+                alignItems: "center", 
+                justifyContent: "space-between",
+                gap: "2px",
+                background: "var(--component-node-widget-background)", 
+                borderTop: "1px solid var(--input-text)",
+                boxSizing: "border-box",      
+                overflow: "hidden"            
+            });
+
+            // 2. Status Label
+            const statusLabel = document.createElement("div");
+            Object.assign(statusLabel.style, {
+                fontSize: "10px", fontWeight: "bold",
+                color: "#888", 
+                textAlign: "center", width: "100%", 
+                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                height: "14px", lineHeight: "14px"
+            });
+            statusLabel.textContent = "READY TO SAVE"; 
+            container.appendChild(statusLabel);
+
+            // 3. Save Button
+            const saveBtn = document.createElement("button");
+            saveBtn.textContent = "Write File";
+            Object.assign(saveBtn.style, { 
+                cursor: "pointer", fontSize: "12px", padding: "4px 10px", width: "90%",
+                height: "26px",  
+                marginTop: "2px"
+            });
+            container.appendChild(saveBtn);
+
+            // 4. Click Handler
+            saveBtn.onclick = async () => {
+                const getVal = (n) => node.widgets.find(w => w.name === n)?.value;
+                const payload = {
+                    filename: getVal("filename") || getVal("select_file"),
+                    content: getVal("content"),
+                    mode: getVal("mode")
+                };
+                const selectFileVal = getVal("select_file");
+                if (selectFileVal && !selectFileVal.startsWith("Create New")) {
+                    payload.filename = selectFileVal;
+                } else {
+                    payload.filename = getVal("filename");
+                }
+
+                saveBtn.textContent = "Writing..."; 
+                saveBtn.disabled = true;
 
                 try {
-                    const info = await api.fetchApi(`/object_info/${targetClassName}`);
-                    const json = await info.json();
+                    const resp = await api.fetchApi("/imgnr/txt2combo/save", { 
+                        method: "POST", 
+                        body: JSON.stringify(payload) 
+                    });
+                    const result = await resp.json();
 
-                    let inputDef = json[targetClassName]?.input?.required?.[targetInputName];
-                    if (!inputDef) {
-                        inputDef = json[targetClassName]?.input?.optional?.[targetInputName];
-                    }
-
-                    if (inputDef) {
-                        console.log("[Txt2Combo] Raw Definition:", inputDef);
-
-                        // Use the updated finder that looks for 'options' too
-                        let values = findValuesList(inputDef);
-
-                        if (values && values.length > 0) {
-                            const contentWidget = node.widgets.find(w => w.name === "content");
-                            if (contentWidget) {
-                                // Ensure all items are strings
-                                const stringValues = values.map(String);
-                                contentWidget.value = stringValues.join("\n");
-                                console.log(`[Txt2Combo] Populated ${values.length} items.`);
-                            }
+                    if (result.success) {
+                        saveBtn.textContent = "Success";
+                        statusLabel.style.color = "var(--input-text)";
+                        
+                        if (result.is_new) {
+                            statusLabel.textContent = `Created: ${result.filename} (Restart Required)`;
+                            statusLabel.title = `File created. Restart ComfyUI to show node: Txt2Combo ${result.filename}`;
                         } else {
-                            console.warn("[Txt2Combo] No list found (checked 'values' and 'options').");
+                            statusLabel.textContent = `Updated: ${result.filename} (Refresh Node)`;
+                            statusLabel.title = `File updated. Press (r) on Txt2Combo ${result.filename} node to refresh values.`;
                         }
+
                     } else {
-                        console.warn("[Txt2Combo] Input definition not found.");
+                        saveBtn.textContent = "Error";
+                        statusLabel.style.color = "red";
+                        statusLabel.textContent = "Error: " + result.message;
                     }
                 } catch (e) {
-                    console.error("[Txt2Combo] Inspection Error:", e);
+                    saveBtn.textContent = "API Error";
+                    console.error(e);
                 }
+
+                setTimeout(() => { 
+                    saveBtn.disabled = false; 
+                    saveBtn.textContent = "Write File"; 
+                }, 2000);
             };
+
+            // 5. Add to Node & FIX SIZING
+            const widget = node.addDOMWidget("writeButton", "div", container, {
+                serialize: false,
+                hideOnZoom: false
+            });
+
+            // CRITICAL: Tell LiteGraph explicitly how tall this widget is
+            // This prevents overlapping and fixes the "Gap" calculation
+            widget.computeSize = function(width) {
+                return [width, footerHeight_padded];
+            };
+
+            // 6. Ensure Node is tall enough on creation
+            requestAnimationFrame(() => {
+                const minHeight = 240; // Approximate height for widgets + footer
+                if (node.size[1] < minHeight) {
+                    node.setSize([node.size[0], minHeight]);
+                }
+            });
         }
     }
 });

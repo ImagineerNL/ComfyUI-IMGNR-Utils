@@ -1,0 +1,14 @@
+# Example LLM Names inc Huggingface location for Zimage PromptEngineer.
+# Update or edit to your own desire.
+# Place in User>IMGNR-Utils>Txt2Combo to autoload the node on next server start.
+# Node name: Txt2Combo Savedirs Models
+[LLM]
+huihui-ai/Huihui-Qwen3-0.6B-abliterated-v2
+huihui-ai/Huihui-Qwen3-VL-2B-Instruct-abliterated
+huihui-ai/Huihui-Qwen3-VL-4B-Instruct-abliterated-FP8
+huihui-ai/Huihui-Qwen3-VL-4B-Instruct-abliterated
+mlabonne/Qwen3-4B-abliterated
+huihui-ai/Huihui-Qwen3-VL-8B-Thinking-abliterated
+mlabonne/Qwen3-8B-abliterated
+coder3101/Qwen3-VL-8B-Thinking-heretic
+coder3101/Qwen3-VL-2B-Thinking-heretic

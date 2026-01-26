@@ -1,0 +1,13 @@
+# Example Standard Image Sizes.
+# Update or edit to your own desire.
+# Place in User>IMGNR-Utils>Txt2Combo to autoload the node on next server start.
+# Node name: Txt2Combo ImageSizes
+[Preset]; [Width=int]; [Height=int]
+1024x1024; 1024; 1024
+2046x2048; 2048; 2048
+Instagram Portrait - 1080x1350; 1080; 1350
+Instagram Square - 1080x1080; 1080; 1080
+Insta/TikTok Reel - 1080x1920; 1080; 1920
+OpenArt App - 1500x1000; 1500; 1000
+Pinterest - 1000x1500; 1000; 1500
+

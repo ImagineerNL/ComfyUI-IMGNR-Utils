@@ -3,7 +3,7 @@
 **A Quality-of-Life node pack designed to solve specific annoyances, reduce clicking, and keep your workflow clean.**
 
 > **Philosophy:**
-> 
+>
 > * Don't re-invent the wheel.
 > * Make ComfyUI easier to use, not harder.
 > * Solve actual workflow bottlenecks with minimal external dependencies.
@@ -21,8 +21,10 @@
   - [5. Node Matcher ("U Might Have A Node For That")](#5-node-matcher-u-might-have-a-node-for-that)
   - [6. Txt2Combo (Autonodes)](#6-txt2combo-autonodes)
 - [📥 Installation](#-installation)
-- [📋 ChangeLog (V3.0.0)](#-changelog-v300)
+- [📋 ChangeLog (V3.1.0)](#-changelog-v310)
 - [⚠️ Disclaimer \& Credits](#️-disclaimer--credits)
+  - [Credits \& Inspiration](#credits--inspiration)
+  - [Definitely worth checking out](#definitely-worth-checking-out)
 
 ---
 
@@ -88,7 +90,7 @@ Behaves like the "No Save" node by default (images are disposable), but gives yo
 
 * **Manual Save:** Click the button to save the current image immediately.
 * **Auto-Save Toggle:** Switch `autosave` to true to capture the next run automatically.
-* **Filename Sync:** Supports `filename_main` and `sequence` inputs to keep multiple outputs (e.g., Original vs. Upscaled) in sync with the same index number.
+* **Filename Sync:** Supports `filename_main` and `counter` inputs to keep multiple Ad-Hoc save nodes (e.g., Original vs. Upscaled) in sync with the same index number.
 
 ![Ad-hoc Save Example](img/AdhocSave.png)
 
@@ -135,6 +137,7 @@ Create your own dropdown selection nodes using simple text files. This is ideal 
 >
 > - *Editing items inside existing sections only requires a Refresh (R).*
 > - *Adding new files (Nodes) or `[Sections]` requires a Server Restart to update the nodes. (`filename` --> Node Name: `Txt2Combo Filename`)*
+> - More examples in the examples folder [Txt2Combo_Examples](./Txt2Combo_Examples/) or in the Example Workflows in ComfyUI
 
 ---
 
@@ -157,13 +160,14 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
   comfy node registry-install ComfyUI-IMGNR-Utils
 ```
 
-## 📋 ChangeLog (V3.0.0)
+## 📋 ChangeLog (V3.1.0)
 
 | Version | | Notable Changes |
 | :-------------: | :-------------: | :------------- |
+| | V3.1.0 | Expanded on Txt2Combo Nodes, added save, added examples folder [Txt2Combo_Examples](./Txt2Combo_Examples/); toggle for counter in Ad-Hoc Save node.
 | V3.0.0 | | Added new Utility [Split Screen View](#1-split-screen-view) ; [Preview Image (Ad-Hoc Save)](#4-preview-image-ad-hoc-save) ; Consolidated Settings file ; UI Fixes and Cleanup/Documentation. |
 | | V2.3.0 | Txt2Combo Support for multiple comboboxes in 1 node, Fix: Catch&Edit Text hover showed full inputnode text |
-| | V2.2.0 | Fix Issue [#3](https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils/issues/3), [#6](https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils/issues/6) ; Tweaks on Catch \& Edit Text and "Preview Image - No Save", ; New Nodes: Txt2Combo Autonodes ; Added Node Descriptions and tooltips. |
+| | V2.2.0 | Fix Issue [#3](https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils/issues/3), [#6](https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils/issues/6) ; Tweaks on Catch \& Edit Text and "Preview Image - No Save", ; New Nodes: [Txt2Combo (Autonodes)](#6-txt2combo-autonodes) ; Added Node Descriptions and tooltips. |
 | | V2.1.0 | Fix menu-item showing up unwanted and added menu in ComfyUI Settings for tweaking search/matching |
 | V2.0.0 | | Added new Utility: [Node Matcher ("U Might Have A Node For That")](#5-node-matcher-u-might-have-a-node-for-that) |
 | V1.0.0 | | Initial Upload |
@@ -171,17 +175,16 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
 ## ⚠️ Disclaimer & Credits
 **Usage:** As with any file you download from the internet: **Use at your own risk**. While tested, this is a personal passion project. Even though I have a degree in IT, I am no programmer by trade. This is a passion project for my own specific usecases and I'm sharing it so other people can benefit from it, the same way as i benefit from other people's work.
 
-**Credits & Inspiration:**
+### Credits & Inspiration
 
 - [ComfyUI Outputlists Combiner](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner) by Gerold Mesinger
 - [Custom Scripts](https://github.com/pythongosssss/ComfyUI-Custom-Scripts) by Pythongosssss
 - [Inpaint Crop&Stitch](https://github.com/lquesada/ComfyUI-Inpaint-CropAndStitch) and [Interactive nodes](https://github.com/lquesada/ComfyUI-Interactive) by Luis Quesada
-
 - [Screen 2 Gif Screenrecorder](https://github.com/NickeManarin/ScreenToGif) by Nicke Manarin for animations in this readme
-
 - [Split Screen Icon](https://thenounproject.com/icon/split-screen-6095990/) by Yudhi Restu Pebriyanto from Noun Project (CC BY 3.0)
   
-**Definitely worth checking out:**
+### Definitely worth checking out
+
 - [ComfyUI Nvidia Docker](https://github.com/mmartial/ComfyUI-Nvidia-Docker) by MMartial
 - [LoRaManager](https://github.com/willmiao/ComfyUI-Lora-Manager) by Willmiao
 - [Smart ComfyUI Gallery](https://github.com/biagiomaf/smart-comfyui-gallery) by Biagiomaf

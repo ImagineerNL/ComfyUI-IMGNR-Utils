@@ -5,6 +5,9 @@
 
 _IGNORE/
 
+# Personal files
+TODO.md
+
 # User-specific files
 *.rsuser
 *.suo
