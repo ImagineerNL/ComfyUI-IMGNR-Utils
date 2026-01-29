@@ -1,5 +1,6 @@
 // IMGNR-Utils/UMHANFT
 // Fixes: Settings to general settings file IMGNR_settings.js
+// Fixes: text match search for missing nodes; debug mode
 // =========================================================
 // FEATURE: Dynamic Node alternative search
 
@@ -18,8 +19,8 @@ app.registerExtension({
     async setup() {
         const PREFIX = "IMGNR"; // Matches settings.js
 
-        // [NEW] Feature Toggle Check
-        const enabled = app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.Enabled`, true);
+        // Feature Toggle Check
+        const enabled = app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.Enabled`);
         if (!enabled) return;
 
         const observer = new MutationObserver((mutations) => {
@@ -45,12 +46,20 @@ app.registerExtension({
         observer.observe(document.body, { childList: true });
 
         async function injectUMHANFTOptions(menuElement) {
+            // [UI FIX] Shift menu up by 50px to prevent bottom overflow
+            if (menuElement.style.top) {
+                const currentTop = parseInt(menuElement.style.top, 10);
+                if (!isNaN(currentTop)) {
+                    menuElement.style.top = `${Math.max(0, currentTop - 50)}px`;
+                }
+            }
+
             const canvas = app.canvas;
             const pos = canvas.graph_mouse;
             const targetNode = canvas.graph.getNodeOnPos(pos[0], pos[1]);
             if (!targetNode) return;
 
-            // Fetch settings using the central prefix
+            // Fetch settings
             const response = await api.fetchApi("/umhanft/find_alternatives", {
                 method: "POST",
                 body: JSON.stringify({ 
@@ -60,10 +69,12 @@ app.registerExtension({
                         required_inputs: targetNode.outputs?.flatMap(o => o.links?.map(l => app.graph.links[l]?.type).filter(Boolean)) || [],
                         provided_outputs: targetNode.inputs?.map(i => app.graph.links[i.link]?.type).filter(Boolean) || []
                     },
-                    strict: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.StrictMatch`, true),
-                    strict_connected: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.StrictConnected`, false),
-                    min_score: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.MinScore`, 50),
-                    max_alts: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.MaxAlternatives`, 15),
+                    strict: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.StrictMatch`),
+                    strict_connected: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.StrictConnected`),
+                    min_score: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.MinScore`),
+                    max_alts: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.MaxAlternatives`),
+                    debug_enabled: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.DebugEnabled`),
+                    debug_node_text: app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.DebugNodeName`),
                     live_sig: {
                         input_types: targetNode.inputs?.map(i => i.type) || [],
                         output_types: targetNode.outputs?.map(o => o.type) || []
@@ -84,7 +95,7 @@ app.registerExtension({
                 menuElement.remove();
                 if (data.count === 0) return;
 
-                const scoringType = app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.ScoringType`, "Percentage");
+                const scoringType = app.ui.settings.getSettingValue(`${PREFIX}.UMHANFT.ScoringType`);
                 const menuItems = [
                     { content: "--- UMightHaveANodeForThat ---", disabled: true, className: "umhanft-header" },
                     { content: `Current: ${targetNode.title || targetNode.type} ${data.current_pack}`, disabled: true, className: "umhanft-header" },
