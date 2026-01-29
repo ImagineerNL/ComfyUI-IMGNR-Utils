@@ -129,6 +129,22 @@ app.registerExtension({
         // =========================================================
 
         app.ui.settings.addSetting({
+            id: `${PREFIX}.UMHANFT.DebugNodeName`,
+            name: "Debug Match Node (Title or S&R Name)",
+            tooltip: "If Debug is enabled, specifically log scoring details for nodes matching this text (e.g., 'LoadEmbedding'). Leave empty to just see top results.",
+            type: "text",
+            defaultValue: "",
+        });
+
+        app.ui.settings.addSetting({
+            id: `${PREFIX}.UMHANFT.DebugEnabled`,
+            name: "Debug Logic to Console",
+            tooltip: "Outputs detailed scoring info to the main console window.",
+            type: "boolean",
+            defaultValue: false,
+        });
+
+        app.ui.settings.addSetting({
             id: `${PREFIX}.UMHANFT.MaxAlternatives`,
             name: "Max Suggestions",
             type: "slider",
@@ -160,7 +176,7 @@ app.registerExtension({
 
         app.ui.settings.addSetting({
             id: `${PREFIX}.UMHANFT.ScoringType`,
-            name: "Scoring Display (Raw Score can be over 100.",
+            name: "Scoring Display",
             type: "combo",
             options: ["Percentage", "Raw Score"],
             defaultValue: "Percentage",
