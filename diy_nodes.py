@@ -1,6 +1,6 @@
-# IMGNR-Utils/Txt2Combo.py
+# IMGNR-Utils/diy_nodes.py
 # # Due to heavy inspiration of code in the String Outputlist node by https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner,
-# the Txt2Combo Node and code is node is licensed under the GPL-3.0 license 
+# the DIY Nodes (formerly Txt2Combo) and code is node is licensed under the GPL-3.0 license 
 # New: Multiple combos per node
 # New: Extended with Lookup Table functionality & Security Fixes & Save Button
 
@@ -13,13 +13,18 @@ from aiohttp import web
 
 # --- SETUP PATHS ---
 comfy_user_dir = folder_paths.get_user_directory()
-target_dir = os.path.join(comfy_user_dir, "IMGNR_Utils", "txt2combo")
+target_dir = os.path.join(comfy_user_dir, "IMGNR_Utils", "DIY-nodes")
+
+# --- LOG Colors ---
+CSTART = '\033[91m'
+CEND = '\033[0m'
+# Example print(CSTART + "Error, does not compute!" + CEND)
 
 if not os.path.exists(target_dir):
     try:
         os.makedirs(target_dir, exist_ok=True)
     except Exception as e:
-        print(f"[Txt2Combo] Error creating directory: {e}")
+        print(CSTART + f"[DIY Nodes] Error creating directory: {e}" + CEND)
 
 # --- GLOBAL REGISTRY FOR API SECURITY ---
 CLASS_TO_FILE_MAP = {}
@@ -260,7 +265,7 @@ def create_or_update_example(filename, content_list):
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write("\n".join(content_list))
     except Exception as e:
-        print(f"[Txt2Combo] Error writing example file {filename}: {e}")
+        print(CSTART + f"[DIY Nodes] Error writing example file {filename}: {e}" + CEND)
 
 create_or_update_example("example.txt", [
     "# Example node!! Will reset on launch!!",
@@ -294,9 +299,9 @@ create_or_update_example("example.txt", [
     "# 'firstname lastname_nrnumber' could be 'John Doe_nr3'", 
     "# ",
     "# USAGE:",    
-    "# Files are stored in User>IMGNR-Utils>Txt2Combo",
+    "# Files are stored in User>IMGNR-Utils>DIY-nodes",
     "# Example Table: [Name=string]; [Width=int]; [Ratio=float]",
-    "# Default is String, Filename is Txt2Combo node name",
+    "# Default is String, Filename is DIY Node name",
     "# - First column is used for the dropdown.",
     "# - Use ; to separate columns. Use [Section] for new sections in node",
     "# - All columns become outputs",
@@ -306,13 +311,13 @@ create_or_update_example("example.txt", [
     "# NOTES:",
     "# Adding new files or [Sections] requires a Server Restart to update the node output slots.",
     "# Editing items inside existing sections only requires a Refresh (R).",
-    "# You can find more examples in custom_nodes\ComfyUI-IMGNR-Utils\Txt2Combo_Examples.",
-    "# Copy them to User>IMGNR-Utils>Txt2Combo to edit and use."
+    "# You can find more examples in custom_nodes\ComfyUI-IMGNR-Utils\DIY-node-library.",
+    "# Copy them to User>IMGNR-Utils>DIY-nodes to edit and use."
 ])
 
 # --- API ENDPOINTS ---
 
-@PromptServer.instance.routes.get("/imgnr/txt2combo/get_node_data")
+@PromptServer.instance.routes.get("/imgnr/diy/get_node_data")
 async def get_node_data(request):
     class_name = request.rel_url.query.get("class_name", "")
     if class_name in CLASS_TO_FILE_MAP:
@@ -327,8 +332,8 @@ async def get_node_data(request):
                 return web.Response(status=500, text=str(e))
     return web.Response(status=404, text="Node config not found")
 
-@PromptServer.instance.routes.post("/imgnr/txt2combo/save")
-async def save_txt_combo(request):
+@PromptServer.instance.routes.post("/imgnr/diy/save")
+async def save_diy_node(request):
     try:
         data = await request.json()
         filename = data.get("filename", "").strip()
@@ -340,13 +345,13 @@ async def save_txt_combo(request):
         if not is_valid:
             error_msg = "\n".join(errors)
             # This print ensures it shows up in ComfyUI Console
-            print(f"\n[Txt2Combo] Validation Failed:\n{error_msg}\n", flush=True)
+            print(CSTART + f"\n[DIY Nodes] Validation Failed:\n{error_msg}\n" + CEND, flush=True)
             return web.json_response({"success": False, "message": error_msg})
 
         # 2. Sanitize
         final_filename = re.sub(r'[^\w\-. ]', '', filename)
         if not final_filename: 
-            print(f"\n[Txt2Combo] Write Failed: Invalid Filename", flush=True)
+            print(CSTART + f"\n[DIY Nodes] Write Failed: Invalid Filename" + CEND, flush=True)
             return web.json_response({"success": False, "message": "Write Failed: Invalid filename"})
             
         if not final_filename.lower().endswith(".txt"):
@@ -354,7 +359,7 @@ async def save_txt_combo(request):
 
         full_path = os.path.abspath(os.path.join(target_dir, final_filename))
         if not full_path.startswith(os.path.abspath(target_dir)):
-            print(f"\n[Txt2Combo] Write Failed: Unwanted Path traversal detected", flush=True)
+            print(CSTART + f"\n[DIY Nodes] Write Failed: Unwanted Path traversal detected" + CEND, flush=True)
             return web.json_response({"success": False, "message": "Unwanted Path traversal detected"})
 
         # 3. Check Existing
@@ -362,7 +367,7 @@ async def save_txt_combo(request):
         
         # NEW SAFETY CHECK
         if not is_new_file and mode == "populate":
-            print(f"\n[Txt2Combo] Write Failed: File exists. Change filename or use Overwrite/Append.", flush=True)
+            print(CSTART + f"\n[DIY Nodes] Write Failed: File exists. Change filename or use Overwrite/Append." + CEND, flush=True)
             return web.json_response({
                 "success": False, 
                 "message": "Write Failed: File exists. Change filename or use Overwrite/Append."
@@ -397,8 +402,8 @@ async def save_txt_combo(request):
         return web.json_response({"success": False, "message": str(e)})
 
 # --- WRITER NODE ---
-class Txt2ComboWriter:
-    DESCRIPTION = "Manage text lists and lookup tables for Txt2Combo."
+class DIYNodeWriter:
+    DESCRIPTION = "Manage text definitions for DIY Nodes."
     
     def __init__(self):
         pass
@@ -417,7 +422,7 @@ class Txt2ComboWriter:
                     "tooltip": ""
                 }),
                 "filename": ("STRING", {
-                    "default": "my_new_list", 
+                    "default": "my_diy_node", 
                     "multiline": False,
                 }),
                 "mode": (["overwrite", "append", "populate"], {
@@ -435,12 +440,14 @@ class Txt2ComboWriter:
 
     RETURN_TYPES = (ANY,)
     RETURN_NAMES = ("inspect",)
-    OUTPUT_TOOLTIPS = ("Connect to Txt2Combo node or ANY combobox to populate widget below",)
+    OUTPUT_TOOLTIPS = ("Connect to a DIY Node or ANY combobox to populate widget below",)
     FUNCTION = "process_file"
-    CATEGORY = "IMGNR"
+    CATEGORY = "IMGNR/DIY nodes"
     OUTPUT_NODE = True
 
     def process_file(self, select_file, filename, content, mode, prompt=None, extra_pnginfo=None):
+        # This function handles the "Queue Prompt" execution to run the DIYNodeWriter.
+        # It replicates the logic of the API for consistency if used in a workflow.
         
         if select_file != "Create New > Use Filename Below":
             final_filename = select_file
@@ -470,9 +477,9 @@ class Txt2ComboWriter:
         is_valid, errors = validate_text_content(content)
         if not is_valid:
             error_msg = "\n".join(errors)
-            print(f"\n[Txt2Combo Writer] Validation Failed during execution:\n{error_msg}\n", flush=True)
+            print(CSTART + f"\n[DIY Nodes] Validation Failed during execution:\n{error_msg}\n" + CEND, flush=True)
             # RAISE EXCEPTION TO SHOW MODAL
-            raise ValueError(f"Txt2Combo Validation Failed:\n{error_msg}")
+            raise ValueError(CSTART + f"DIY Node Writer Validation Failed:\n{error_msg}" +CEND)
 
         # Write/Append
         new_lines = [line.strip() for line in content.splitlines() if line.strip()]
@@ -496,7 +503,7 @@ class Txt2ComboWriter:
                 msg = "Overwrote"
 
             status_msg = f"Success: {msg} {full_path}"
-            print(f"[Txt2Combo Writer] {status_msg}")
+            print(CSTART + f"[DIY Nodes] {status_msg}" + CEND)
             
             return {
                 "ui": {
@@ -506,14 +513,14 @@ class Txt2ComboWriter:
             }
 
         except Exception as e:
-            raise ValueError(f"Write Error: {e}")
+            raise ValueError(CSTART + f"DIY Node Writer - Write Error: {e}" + CEND)
 
 
 # --- DYNAMIC READER NODE LOGIC ---
 
-class Txt2ComboBase:
+class DIYNodeBase:
     FUNCTION = "select_item"
-    CATEGORY = "IMGNR"
+    CATEGORY = "IMGNR/DIY nodes"
 
     def select_item(self, **kwargs):
         # 1. Setup Context
@@ -732,16 +739,16 @@ def create_dynamic_node(filename_with_ext):
                 else:
                     inputs["required"][key] = ("STRING", {"multiline": False, "default": str(d)})
         
-        inputs["optional"] = {"inspect": (ANY, {"tooltip": "Connect Txt2Combo Writer"})}
+        inputs["optional"] = {"inspect": (ANY, {"tooltip": "Connect DIY Node Writer"})}
         return inputs
 
     safe_name = filename_with_ext.replace(".", "_").replace(" ", "_")
-    internal_class_name = f"Txt2Combo_{safe_name}"
+    internal_class_name = f"DIY_{safe_name}"
     CLASS_TO_FILE_MAP[internal_class_name] = filename_with_ext
 
     DynamicClass = type(
         internal_class_name,
-        (Txt2ComboBase,), 
+        (DIYNodeBase,), 
         {
             "INPUT_TYPES": classmethod(input_types_method),
             "RETURN_TYPES": tuple(all_return_types) if all_return_types else (ANY,),
@@ -755,8 +762,8 @@ def create_dynamic_node(filename_with_ext):
     return DynamicClass, internal_class_name
 
 
-NODE_CLASS_MAPPINGS = {"Txt2ComboWriter": Txt2ComboWriter}
-NODE_DISPLAY_NAME_MAPPINGS = {"Txt2ComboWriter": "Txt2Combo Writer (IMGNR)"}
+NODE_CLASS_MAPPINGS = {"DIYNodeWriter": DIYNodeWriter}
+NODE_DISPLAY_NAME_MAPPINGS = {"DIYNodeWriter": "DIY Node Writer (IMGNR)"}
 
 if os.path.exists(target_dir):
     files = [f for f in os.listdir(target_dir) if f.endswith('.txt')]
@@ -764,4 +771,4 @@ if os.path.exists(target_dir):
         NodeClass, internal_name = create_dynamic_node(filename)
         clean_name = os.path.splitext(filename)[0]
         NODE_CLASS_MAPPINGS[internal_name] = NodeClass
-        NODE_DISPLAY_NAME_MAPPINGS[internal_name] = f"Txt2Combo: {clean_name} (IMGNR)"
+        NODE_DISPLAY_NAME_MAPPINGS[internal_name] = f"DIY: {clean_name} (IMGNR)"

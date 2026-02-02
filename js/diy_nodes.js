@@ -1,8 +1,7 @@
-// IMGNR-Utils/Txt2Combo
+// IMGNR-Utils/DIY Nodes
 // Due to heavy inspiration of code in the String Outputlist node by https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner,
-// the Txt2Combo Node and code is licensed under the GPL-3.0 license 
+// the DIY Nodes (formerly Txt2Combo Node) and code is licensed under the GPL-3.0 license 
 // Extended to support Lookup Tables, Reverse Inspection, Direct Save Button, and Validation
-
 
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
@@ -33,11 +32,11 @@ function findValuesList(obj) {
 }
 
 app.registerExtension({
-    name: "IMGNR.Txt2ComboWriter",
+    name: "IMGNR.DIYNodeWriter",
 
     // 1. Populate Mode / Execution Status (Backend -> Frontend)
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
-        if (nodeData.name === "Txt2ComboWriter") {
+        if (nodeData.name === "DIYNodeWriter") {
             const onExecuted = nodeType.prototype.onExecuted;
             nodeType.prototype.onExecuted = function (message) {
                 onExecuted?.apply(this, arguments);
@@ -83,7 +82,7 @@ app.registerExtension({
 
     // 2. JS Logic (Inspect + Save Button)
     async nodeCreated(node) {
-        if (node.comfyClass === "Txt2ComboWriter") {
+        if (node.comfyClass === "DIYNodeWriter") {
             
             // --- A. INSPECT LOGIC ---
             const inspectSlot = node.outputs.findIndex(o => o.name === "inspect");
@@ -97,19 +96,19 @@ app.registerExtension({
                     app.graph.removeLink(linkInfo.id);
 
                     const targetType = targetNode.type || targetNode.comfyClass || "";
-                    console.log(`[Txt2Combo] Inspecting Node Type: ${targetType}`);
+                    console.log(`[DIY Nodes] Inspecting Node Type: ${targetType}`);
 
                     // Reverse Load
-                    if (targetType.startsWith("Txt2Combo_")) {
+                    if (targetType.startsWith("DIY_")) {
                         try {
-                            const response = await api.fetchApi(`/imgnr/txt2combo/get_node_data?class_name=${targetType}`);
+                            const response = await api.fetchApi(`/imgnr/diy/get_node_data?class_name=${targetType}`);
                             if (response.ok) {
                                 const data = await response.json();
                                 const filenameWidget = node.widgets.find(w => w.name === "filename");
                                 const contentWidget = node.widgets.find(w => w.name === "content");
                                 if (filenameWidget) filenameWidget.value = data.filename;
                                 if (contentWidget) contentWidget.value = data.content;
-                                console.log(`[Txt2Combo] Loaded content from ${data.filename}`);
+                                console.log(`[DIY Nodes] Loaded content from ${data.filename}`);
                             }
                         } catch (e) { console.error(e); }
                         return;
@@ -140,7 +139,7 @@ app.registerExtension({
             const footerHeight = 60;
             const footerHeight_padded = 75; 
             const container = document.createElement("div");
-            container.className = "imgnr-txt2combo-controls";
+            container.className = "imgnr-diy-controls";
             Object.assign(container.style, {
                 width: "100%", 
                 height: `${footerHeight}px`,  
@@ -199,7 +198,7 @@ app.registerExtension({
                 saveBtn.disabled = true;
 
                 try {
-                    const resp = await api.fetchApi("/imgnr/txt2combo/save", { 
+                    const resp = await api.fetchApi("/imgnr/diy/save", { 
                         method: "POST", 
                         body: JSON.stringify(payload) 
                     });
@@ -211,10 +210,10 @@ app.registerExtension({
                         
                         if (result.is_new) {
                             statusLabel.textContent = `Created: ${result.filename} (Restart Required)`;
-                            statusLabel.title = `File created. Restart ComfyUI to show node: Txt2Combo ${result.filename}`;
+                            statusLabel.title = `File created. Restart ComfyUI to show node: DIY: ${result.filename}`;
                         } else {
                             statusLabel.textContent = `Updated: ${result.filename} (Refresh Node)`;
-                            statusLabel.title = `File updated. Press (r) on Txt2Combo ${result.filename} node to refresh values.`;
+                            statusLabel.title = `File updated. Press (r) on DIY: ${result.filename} node to refresh values.`;
                         }
 
                     } else {
