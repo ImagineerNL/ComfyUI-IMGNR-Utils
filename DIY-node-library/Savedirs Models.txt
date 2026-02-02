@@ -1,0 +1,31 @@
+# Example Save Directories to keep your OutputDir organised.
+# Update or edit to your own desire.
+# Place in User>IMGNR-Utils>DIY-nodes to autoload the node on next server start.
+# Node name: DIY: 'filename'
+[Model;output=false];[Dir;output=false]
+#Models
+_ILL (Illustrious); _ILL
+_F1D (Flux 1D); _F1D
+_FK4 (Flux Klein 4B); _FK4
+_FK9 (Flux Klein 9B); _FK9
+_PONY; _PONY
+_QWEN; _QWEN
+_SDXL; _SDXL
+_ZiB (Zimage Base); _ZiB
+_ZiT (Zimage Turbo); _ZiT
+#Multimedia
+_WAN; _WAN
+_LTX2; _LTX2
+_Audio; _Audio
+# String inputfield for Subdirectory (no output connector)
+[Subdir;output=false]
+# Concat output directory Linux and Windows
+[concat=SaveDir];[Dir];[sep];[Subdir];[sep]
+[concat=SaveDir+Filename];[Dir];[sep];[Subdir];[sep];[Filename]
+# String inputfield for filename
+[Filename]
+[System;output=false];[sep;output=false]
+Win; \
+Linux; /
+Unix; /
+Mac; /

@@ -9,8 +9,11 @@ from .preview_image_base64 import NODE_CLASS_MAPPINGS as preview_b64_mappings, N
 # Import umhanft nodes
 from .umhanft_logic import NODE_CLASS_MAPPINGS as umhanft_mappings, NODE_DISPLAY_NAME_MAPPINGS as umhanft_display_mappings
 
-# Import txt2combo
-from .txt2combo import NODE_CLASS_MAPPINGS as txt2combo_mappings, NODE_DISPLAY_NAME_MAPPINGS as txt2combo_display_mappings
+# Import DIY Nodes
+from .diy_nodes import NODE_CLASS_MAPPINGS as diynodes_mappings, NODE_DISPLAY_NAME_MAPPINGS as diynodes_display_mappings
+
+# Import DIY Reconstructor
+from .diy_reconstructor import NODE_CLASS_MAPPINGS as diyreconstructor_mappings, NODE_DISPLAY_NAME_MAPPINGS as diyreconstructor_display_mappings
 
 # Location of Javascript files
 WEB_DIRECTORY = "./js"
@@ -31,9 +34,13 @@ ALL_NODE_DISPLAY_NAME_MAPPINGS.update(preview_b64_display_mappings)
 ALL_NODE_CLASS_MAPPINGS.update(umhanft_mappings)
 ALL_NODE_DISPLAY_NAME_MAPPINGS.update(umhanft_display_mappings)
 
-# Update with mappings from txt2combo
-ALL_NODE_CLASS_MAPPINGS.update(txt2combo_mappings)
-ALL_NODE_DISPLAY_NAME_MAPPINGS.update(txt2combo_display_mappings)
+# Update with mappings from diy_nodes
+ALL_NODE_CLASS_MAPPINGS.update(diynodes_mappings)
+ALL_NODE_DISPLAY_NAME_MAPPINGS.update(diynodes_display_mappings)
+
+# Update with mappings from diy_reconstructor
+ALL_NODE_CLASS_MAPPINGS.update(diyreconstructor_mappings)
+ALL_NODE_DISPLAY_NAME_MAPPINGS.update(diyreconstructor_display_mappings)
 
 __all__ = ['ALL_NODE_CLASS_MAPPINGS', 'ALL_NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIRECTORY']
 
@@ -42,4 +49,4 @@ NODE_CLASS_MAPPINGS = ALL_NODE_CLASS_MAPPINGS
 NODE_DISPLAY_NAME_MAPPINGS = ALL_NODE_DISPLAY_NAME_MAPPINGS
 
 # UPDATED print statement
-print("### Loading Custom Nodes: IMGNR/Utils Pack (CatchEditText, PreviewImage, UMHANFT, Txt2Combo)")
+print("\033[92m### Loading Custom Nodes: IMGNR/Utils Pack (CatchEditText, PreviewImage, UMHANFT, DIY Nodes)\033[0m")

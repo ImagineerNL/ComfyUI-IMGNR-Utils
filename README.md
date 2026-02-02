@@ -8,6 +8,7 @@
 > * Make ComfyUI easier to use, not harder.
 > * Solve actual workflow bottlenecks with minimal external dependencies.
 > * Minimal Change, Maximum Effect.
+> * ZERO new requirements to mess up your install
 
 ---
 
@@ -19,9 +20,9 @@
   - [3. Preview Image (No Save)](#3-preview-image-no-save)
   - [4. Preview Image (Ad-Hoc Save)](#4-preview-image-ad-hoc-save)
   - [5. Node Matcher ("U Might Have A Node For That")](#5-node-matcher-u-might-have-a-node-for-that)
-  - [6. Txt2Combo (Autonodes)](#6-txt2combo-autonodes)
+  - [6. DIY-Nodes (Previously Txt2Combo nodes)](#6-diy-nodes-previously-txt2combo-nodes)
 - [📥 Installation](#-installation)
-- [📋 ChangeLog (V3.1.0)](#-changelog-v310)
+- [📋 ChangeLog (V3.2.0)](#-changelog-v320)
 - [⚠️ Disclaimer \& Credits](#️-disclaimer--credits)
   - [Credits \& Inspiration](#credits--inspiration)
   - [Definitely worth checking out](#definitely-worth-checking-out)
@@ -115,29 +116,33 @@ When loading workflows from CivitAI or Reddit, you often see missing nodes. This
 
 ---
 
-### 6. Txt2Combo (Autonodes)
+### 6. DIY-Nodes (Previously Txt2Combo nodes)
 
-**Dynamic dropdown lists.** *(Nodes 2.0 compatible)*
+**Build your own dynamic nodes** *(Nodes 2.0 compatible)*
 
-Create your own dropdown selection nodes using simple text files. This is ideal for prompt styles, camera models, or frequently used settings.
+Create your own nodes using simple text files. This is ideal for prompt styles, camera models, or frequently used settings.
+You can use comboboxes, `STRING`, `TEXTBOX`, `INT`, `FLOAT` and even `concat` different combinations, all in one node, tailored to your needs.
 
-* **Create:** Use the `Txt2Combo Writer` node (or edit files in `User/IMGNR-Utils/txt2combo`) to create and maintain your custom combonodes.
-* **Connect:** Link your Txt2Combo node `text` output to the combobox of another node.
-* **Use:** Select your value from the dropdown.
+* **Create:** Use the `DIY Node Writer` node (or edit files in `User/IMGNR-Utils/DIY-nodes`) to create and maintain your custom combonodes.
+* **Connect:** Link your DIY node outputs to be the input for any node.
+* **Use:** Fill in the fields, or Select your value from the dropdown.
+![DIY Usecase](img/Txt2Combo_Usecase.gif)
 
 **Advanced Features:**
 
 * **Multi-Combo:** Use brackets `[Section Name]` in your text file to create one node with multiple dropdowns and outputs.
 * **Inspect:** Connect the Writer `inspect`-output to an existing combo input on *any* node to import its values into the editor box to then cherrypick and make your custom list.[^1]
 
+* **Build your own path:** By combining comboboxes and inputfields you can create your own path for example for consistent file saving.
+![DIY Usecase](img/DIY-nodes-savedirs.png)
 
-![Txt2Combo Usecase](img/Txt2Combo_Usecase.gif)
 
 > ***NOTE:***
 >
 > - *Editing items inside existing sections only requires a Refresh (R).*
-> - *Adding new files (Nodes) or `[Sections]` requires a Server Restart to update the nodes. (`filename` --> Node Name: `Txt2Combo Filename`)*
-> - More examples in the examples folder [Txt2Combo_Examples](./Txt2Combo_Examples/) or in the Example Workflows in ComfyUI
+> - *Adding new files (Nodes) or `[Sections]` requires a Server Restart to update the nodes. (`filename` --> Node Name: `DIY: Filename`)*
+> - More examples in the examples folder [DIY-node-library](./DIY-node-library/) or in the Example Workflows in ComfyUI
+> - Will try to find missing DIY nodes in the node-library; feel free to submit your own by adding an Issue here.
 
 ---
 
@@ -160,10 +165,11 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
   comfy node registry-install ComfyUI-IMGNR-Utils
 ```
 
-## 📋 ChangeLog (V3.1.0)
+## 📋 ChangeLog (V3.2.0)
 
 | Version | | Notable Changes |
 | :-------------: | :-------------: | :------------- |
+| | V3.2.0 | ❌ Breaking change: Txt2Combo renamed to DIY-Nodes due to extended functionality |
 | | V3.1.0 | Expanded on Txt2Combo Nodes, added save, added examples folder [Txt2Combo_Examples](./Txt2Combo_Examples/); toggle for counter in Ad-Hoc Save node.
 | V3.0.0 | | Added new Utility [Split Screen View](#1-split-screen-view) ; [Preview Image (Ad-Hoc Save)](#4-preview-image-ad-hoc-save) ; Consolidated Settings file ; UI Fixes and Cleanup/Documentation. |
 | | V2.3.0 | Txt2Combo Support for multiple comboboxes in 1 node, Fix: Catch&Edit Text hover showed full inputnode text |
@@ -190,4 +196,4 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
 - [Smart ComfyUI Gallery](https://github.com/biagiomaf/smart-comfyui-gallery) by Biagiomaf
 - [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer), Smooth BW Image to Vector made by me (Shameless self-plug)
 
-[^1]: *The 'inspect' code is heavily inspired on the `inspect combo` in the `String Outputlist` node of [ComfyUI Outputlists Combiner by Gerold Mesinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner). Therefor, the Txt2Combo Node and code is licensed under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.txt).*
+[^1]: *The 'inspect' code is heavily inspired on the `inspect combo` in the `String Outputlist` node of [ComfyUI Outputlists Combiner by Gerold Mesinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner). Therefor, the DIY Node and code is licensed under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.txt).*

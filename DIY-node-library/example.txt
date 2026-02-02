@@ -1,0 +1,34 @@
+# Example node!! Will reset on launch!!
+# Scroll down below list for more information
+[Resolution]; [Width=int]; [Height=int]; [Ratio=float]
+FullHD; 1920; 1080; 1.7778
+4K; 3840; 2160; 1.7778
+Square1080; 1080; 1080; 1.0
+
+[Format]
+PNG
+JPG
+[Boolean=bool]
+true
+false
+[Prefered Samplers]; [sampler]; [scheduler]
+EulerSimple; euler; simple
+EulerBeta; euler; beta
+dpmpp_2m; dpmpp_2m; karras
+lcm; lcm; normal
+# 
+# USAGE:
+# Files are stored in User>IMGNR-Utils>Txt2Combo
+# Example Table: [Name=string]; [Width=int]; [Ratio=float]
+# Default is String, Filename is Txt2Combo node name
+# - First column is used for the dropdown.
+# - Use ; to separate columns. Use [Section] for new sections in node
+# - All columns become outputs
+# - Supports =int, =float, =bool, =string (default)
+# - Comments start with #
+# 
+# NOTES:
+# Adding new files or [Sections] requires a Server Restart to update the node output slots.
+# Editing items inside existing sections only requires a Refresh (R).
+# You can find more examples in custom_nodes\ComfyUI-IMGNR-Utils\Txt2Combo_Examples.
+# Copy them to User>IMGNR-Utils>Txt2Combo to edit and use.
