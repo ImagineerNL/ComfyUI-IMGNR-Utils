@@ -1,10 +1,13 @@
 // IMGNR-Utils/Txt2Combo
 // Due to heavy inspiration of code in the String Outputlist node by https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner,
-// the Txt2Combo Node and code is  licensed under the GPL-3.0 license 
-// Extended to support Lookup Tables, Reverse Inspection, and Direct Save Button
+// the Txt2Combo Node and code is licensed under the GPL-3.0 license 
+// Extended to support Lookup Tables, Reverse Inspection, Direct Save Button, and Validation
+
 
 import { app } from "../../scripts/app.js";
 import { api } from "../../scripts/api.js";
+
+// --- MAIN EXTENSION ---
 
 // Helper: Recursively search for a list of strings in the definition object
 function findValuesList(obj) {
@@ -32,17 +35,46 @@ function findValuesList(obj) {
 app.registerExtension({
     name: "IMGNR.Txt2ComboWriter",
 
-    // 1. Populate Mode (Backend -> Frontend)
+    // 1. Populate Mode / Execution Status (Backend -> Frontend)
     async beforeRegisterNodeDef(nodeType, nodeData, app) {
         if (nodeData.name === "Txt2ComboWriter") {
             const onExecuted = nodeType.prototype.onExecuted;
             nodeType.prototype.onExecuted = function (message) {
                 onExecuted?.apply(this, arguments);
+                
+                // Handle Content Update (Populate Mode)
                 if (message?.text && Array.isArray(message.text) && message.text.length > 0) {
                     const targetWidget = this.widgets.find(w => w.name === "content");
                     if (targetWidget && targetWidget.value !== message.text[0]) {
                         targetWidget.value = message.text[0];
                         this.onResize?.(this.size); 
+                    }
+                }
+
+                // Handle Status Update (Write Mode - Success/Error Feedback)
+                if (message?.status) {
+                    // Robustly find the status label element
+                    // It is inside the 'writeButton' DOM widget, first child of the container
+                    const writeWidget = this.widgets?.find(w => w.name === "writeButton");
+                    const container = writeWidget?.element;
+                    const statusLabel = container?.children?.[0]; // The status div is the first child
+
+                    if (statusLabel) {
+                        statusLabel.textContent = message.status.text;
+                        statusLabel.style.color = message.status.color || "var(--input-text)";
+                        statusLabel.title = message.status.title || "";
+                        
+                        // Optional: Reset after a delay if success
+                        if (message.status.text.includes("Success")) {
+                            setTimeout(() => {
+                                 // Check existence again in timeout
+                                 if (statusLabel.isConnected) { 
+                                     statusLabel.textContent = "READY TO SAVE";
+                                     statusLabel.style.color = "#888";
+                                     statusLabel.title = "";
+                                 }
+                            }, 4000);
+                        }
                     }
                 }
             };
@@ -105,10 +137,8 @@ app.registerExtension({
             }
 
             // --- B. SAVE BUTTON ---
-            
-            // 1. Create Footer Container (Fixed Height)
             const footerHeight = 60;
-            const footerHeight_padded = 75; // Padding needed to keep it from overflowing on bottom edge
+            const footerHeight_padded = 75; 
             const container = document.createElement("div");
             container.className = "imgnr-txt2combo-controls";
             Object.assign(container.style, {
@@ -126,7 +156,7 @@ app.registerExtension({
                 overflow: "hidden"            
             });
 
-            // 2. Status Label
+            // Status Label
             const statusLabel = document.createElement("div");
             Object.assign(statusLabel.style, {
                 fontSize: "10px", fontWeight: "bold",
@@ -138,7 +168,7 @@ app.registerExtension({
             statusLabel.textContent = "READY TO SAVE"; 
             container.appendChild(statusLabel);
 
-            // 3. Save Button
+            // Save Button
             const saveBtn = document.createElement("button");
             saveBtn.textContent = "Write File";
             Object.assign(saveBtn.style, { 
@@ -148,12 +178,14 @@ app.registerExtension({
             });
             container.appendChild(saveBtn);
 
-            // 4. Click Handler
+            // Click Handler
             saveBtn.onclick = async () => {
                 const getVal = (n) => node.widgets.find(w => w.name === n)?.value;
+                const contentVal = getVal("content") || "";
+                
                 const payload = {
                     filename: getVal("filename") || getVal("select_file"),
-                    content: getVal("content"),
+                    content: contentVal,
                     mode: getVal("mode")
                 };
                 const selectFileVal = getVal("select_file");
@@ -163,7 +195,7 @@ app.registerExtension({
                     payload.filename = getVal("filename");
                 }
 
-                saveBtn.textContent = "Writing..."; 
+                saveBtn.textContent = "Processing..."; 
                 saveBtn.disabled = true;
 
                 try {
@@ -186,9 +218,11 @@ app.registerExtension({
                         }
 
                     } else {
-                        saveBtn.textContent = "Error";
+                        // SERVER VALIDATION ERROR
+                        saveBtn.textContent = "Invalid Syntax";
                         statusLabel.style.color = "red";
-                        statusLabel.textContent = "Error: " + result.message;
+                        statusLabel.textContent = "Check Tooltip/Console";
+                        statusLabel.title = result.message; 
                     }
                 } catch (e) {
                     saveBtn.textContent = "API Error";
@@ -201,21 +235,17 @@ app.registerExtension({
                 }, 2000);
             };
 
-            // 5. Add to Node & FIX SIZING
             const widget = node.addDOMWidget("writeButton", "div", container, {
                 serialize: false,
                 hideOnZoom: false
             });
 
-            // CRITICAL: Tell LiteGraph explicitly how tall this widget is
-            // This prevents overlapping and fixes the "Gap" calculation
             widget.computeSize = function(width) {
                 return [width, footerHeight_padded];
             };
 
-            // 6. Ensure Node is tall enough on creation
             requestAnimationFrame(() => {
-                const minHeight = 240; // Approximate height for widgets + footer
+                const minHeight = 240; 
                 if (node.size[1] < minHeight) {
                     node.setSize([node.size[0], minHeight]);
                 }

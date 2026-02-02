@@ -35,15 +35,164 @@ class AnyType(str):
 
 ANY = AnyType("*")
 
+# --- HELPER: PARSING & VALIDATION ---
+
+def split_line_respecting_brackets(line):
+    parts = []
+    buffer = ""
+    balance = 0
+    for char in line:
+        if char == "[": balance += 1
+        elif char == "]": balance -= 1
+        
+        if char == ";" and balance == 0:
+            if buffer.strip(): parts.append(buffer.strip())
+            buffer = ""
+        else:
+            buffer += char
+    if buffer.strip(): parts.append(buffer.strip())
+    return parts
+
+def validate_text_content(content):
+    """
+    Strict validation of the configuration text.
+    Returns (True, []) if valid, or (False, [errors]) if invalid.
+    """
+    lines = content.splitlines()
+    errors = []
+    
+    VALID_TYPES = {"string", "int", "float", "bool", "textbox"}
+    VALID_ATTRS = {"output", "default"}
+    VALID_BOOLS = {"true", "false", "yes", "no", "0", "1", "on", "off"}
+    
+    defined_names = set()
+    
+    # --- PASS 1: Harvest Names ---
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#"): continue
+
+        if line.startswith("["):
+            parts = split_line_respecting_brackets(line)
+            # Check Concat
+            if parts[0].lower().startswith("[concat="):
+                try:
+                    def_str = parts[0][1:-1] # remove []
+                    _, name = def_str.split("=", 1)
+                    defined_names.add(name.strip())
+                except: pass
+            # Check Sections
+            elif parts[0].startswith("["):
+                for p in parts:
+                    clean = p.strip()
+                    if clean.startswith("[") and clean.endswith("]"):
+                        clean = clean[1:-1]
+                    # definition is before first semicolon
+                    definition = clean.split(";")[0]
+                    if "=" in definition:
+                        name = definition.split("=")[0].strip()
+                        defined_names.add(name)
+                    else:
+                        defined_names.add(definition.strip())
+
+    # --- PASS 2: Detail Validation ---
+    current_section_cols = 0
+    inside_section = False
+    
+    for i, line in enumerate(lines):
+        line = line.strip()
+        if not line or line.startswith("#"): continue
+        
+        # A. HEADERS
+        if line.startswith("["):
+            # Bracket Balance
+            if line.count("[") != line.count("]"):
+                errors.append(f"Line {i+1}: Unbalanced brackets.")
+                continue
+                
+            parts = split_line_respecting_brackets(line)
+            
+            # 1. CONCAT
+            if parts[0].lower().startswith("[concat="):
+                for k in range(1, len(parts)):
+                    p = parts[k].strip()
+                    if p.startswith("[") and p.endswith("]"):
+                        ref = p[1:-1].strip()
+                        if ref not in defined_names:
+                            errors.append(f"Line {i+1}: Unknown reference '{ref}' in concat.")
+                    elif not (p.startswith('"') and p.endswith('"')):
+                        errors.append(f"Line {i+1}: Invalid concat part '{p}'. Must be [Ref] or \"Text\".")
+                inside_section = False
+                continue
+            
+            # 2. SECTION
+            inside_section = True
+            current_section_cols = len(parts)
+            
+            for part in parts:
+                clean = part.strip()
+                if clean.startswith("[") and clean.endswith("]"):
+                    clean = clean[1:-1]
+                
+                sub_parts = [s.strip() for s in clean.split(";") if s.strip()]
+                
+                # Check Type
+                main_def = sub_parts[0]
+                col_type = "string"
+                if "=" in main_def:
+                    _, type_str = main_def.split("=", 1)
+                    col_type = type_str.lower().strip()
+                
+                if col_type not in VALID_TYPES:
+                    errors.append(f"Line {i+1}: Invalid type '{col_type}'. Valid: {', '.join(VALID_TYPES)}")
+                
+                # Check Attributes
+                for attr in sub_parts[1:]:
+                    if "=" not in attr:
+                        errors.append(f"Line {i+1}: Invalid attribute format '{attr}'. Use key=value.")
+                        continue
+                    k, v = attr.split("=", 1)
+                    k = k.lower().strip()
+                    v = v.lower().strip()
+                    
+                    if k not in VALID_ATTRS:
+                        errors.append(f"Line {i+1}: Unknown attribute '{k}'.")
+                    elif k == "output":
+                        if v not in VALID_BOOLS:
+                            errors.append(f"Line {i+1}: Invalid boolean '{v}' for output.")
+
+            continue
+
+        # B. DATA ROWS
+        if inside_section:
+            cols = line.split(";")
+            if len(cols) > current_section_cols:
+                errors.append(f"Line {i+1}: Too many values. Expected {current_section_cols}, found {len(cols)}.")
+
+    return (len(errors) == 0, errors)
+
 # --- HELPER: TYPE CONVERSION ---
 def parse_type_def(header_part):
     clean_part = header_part.strip()
-    col_name = clean_part
+    
+    # Remove surrounding brackets if present for processing
+    if clean_part.startswith("[") and clean_part.endswith("]"):
+        clean_part = clean_part[1:-1]
+
+    # Split by semicolon to find attributes (e.g. Name=int;output=false)
+    sub_parts = [s.strip() for s in clean_part.split(";") if s.strip()]
+    
+    # The first part is always "Name" or "Name=Type"
+    main_def = sub_parts[0]
+    
+    col_name = main_def
     col_type = "STRING"
     default_val = ""
+    visible = True
+    is_textbox = False
 
-    if "=" in clean_part:
-        name_str, type_str = clean_part.split("=", 1)
+    if "=" in main_def:
+        name_str, type_str = main_def.split("=", 1)
         col_name = name_str.strip()
         type_str = type_str.strip().lower()
 
@@ -56,11 +205,29 @@ def parse_type_def(header_part):
         elif type_str == "bool":
             col_type = "BOOLEAN"
             default_val = False
+        elif type_str == "textbox":
+            col_type = "TEXTBOX" # Special internal flag
+            default_val = ""
 
-    return col_name, col_type, default_val
+    # Process additional attributes (output=false, etc)
+    for attr in sub_parts[1:]:
+        if "=" in attr:
+            k, v = attr.split("=", 1)
+            k = k.strip().lower()
+            v = v.strip().lower()
+            if k == "output" and v in ["false", "no", "0"]:
+                visible = False
+            # We could handle default=... here if needed in future
+
+    return {
+        "name": col_name, 
+        "type": col_type, 
+        "default": default_val, 
+        "visible": visible
+    }
 
 def convert_value(value_str, target_type):
-    value_str = value_str.strip()
+    value_str = str(value_str).strip() # Ensure string
     if target_type == "INT":
         try:
             clean = value_str.replace(",", "").replace(".", "")
@@ -114,6 +281,17 @@ create_or_update_example("example.txt", [
     "EulerBeta; euler; beta",
     "dpmpp_2m; dpmpp_2m; karras",
     "lcm; lcm; normal",
+    "",
+    "# creates a textbox with the name 'Prompt'",
+    "[Prompt=Textbox]",
+    "# Creates 2 string and 1 int inputfield and does not send them to an output",
+    "[firstname=string;output=false]",
+    "[lastname=string;output=false]",
+    "[number=int;output=false]",
+    "",
+    "# creates an output 'fullname' which sends the content of the inputfields", 
+    "[concat=fullname];[firstname];\" \";[lastname];\"_nr\";[number]",
+    "# 'firstname lastname_nrnumber' could be 'John Doe_nr3'", 
     "# ",
     "# USAGE:",    
     "# Files are stored in User>IMGNR-Utils>Txt2Combo",
@@ -157,22 +335,40 @@ async def save_txt_combo(request):
         content = data.get("content", "")
         mode = data.get("mode", "populate") 
         
-        # 1. Sanitize
+        # 1. VALIDATION (Backend Side)
+        is_valid, errors = validate_text_content(content)
+        if not is_valid:
+            error_msg = "\n".join(errors)
+            # This print ensures it shows up in ComfyUI Console
+            print(f"\n[Txt2Combo] Validation Failed:\n{error_msg}\n", flush=True)
+            return web.json_response({"success": False, "message": error_msg})
+
+        # 2. Sanitize
         final_filename = re.sub(r'[^\w\-. ]', '', filename)
         if not final_filename: 
-            return web.json_response({"success": False, "message": "Invalid filename"})
+            print(f"\n[Txt2Combo] Write Failed: Invalid Filename", flush=True)
+            return web.json_response({"success": False, "message": "Write Failed: Invalid filename"})
             
         if not final_filename.lower().endswith(".txt"):
             final_filename += ".txt"
 
         full_path = os.path.abspath(os.path.join(target_dir, final_filename))
         if not full_path.startswith(os.path.abspath(target_dir)):
-            return web.json_response({"success": False, "message": "Path traversal detected"})
+            print(f"\n[Txt2Combo] Write Failed: Unwanted Path traversal detected", flush=True)
+            return web.json_response({"success": False, "message": "Unwanted Path traversal detected"})
 
-        # 2. Check Existing
+        # 3. Check Existing
         is_new_file = not os.path.exists(full_path)
         
-        # 3. Write
+        # NEW SAFETY CHECK
+        if not is_new_file and mode == "populate":
+            print(f"\n[Txt2Combo] Write Failed: File exists. Change filename or use Overwrite/Append.", flush=True)
+            return web.json_response({
+                "success": False, 
+                "message": "Write Failed: File exists. Change filename or use Overwrite/Append."
+            })
+        
+        # 4. Write
         write_mode = "w"
         if mode == "append" and not is_new_file:
             write_mode = "a"
@@ -245,8 +441,6 @@ class Txt2ComboWriter:
     OUTPUT_NODE = True
 
     def process_file(self, select_file, filename, content, mode, prompt=None, extra_pnginfo=None):
-        # This function handles the "Queue Prompt" execution to run the Txt2ComboWriter.
-        # It replicates the logic of the API for consistency if used in a workflow.
         
         if select_file != "Create New > Use Filename Below":
             final_filename = select_file
@@ -271,6 +465,14 @@ class Txt2ComboWriter:
                     return {"ui": {"text": [""]}, "result": ("*")}
             else:
                 return {"ui": {"text": [""]}, "result": ("*")}
+        
+        # 3. Validation Logic (EXECUTION PATH)
+        is_valid, errors = validate_text_content(content)
+        if not is_valid:
+            error_msg = "\n".join(errors)
+            print(f"\n[Txt2Combo Writer] Validation Failed during execution:\n{error_msg}\n", flush=True)
+            # RAISE EXCEPTION TO SHOW MODAL
+            raise ValueError(f"Txt2Combo Validation Failed:\n{error_msg}")
 
         # Write/Append
         new_lines = [line.strip() for line in content.splitlines() if line.strip()]
@@ -296,10 +498,15 @@ class Txt2ComboWriter:
             status_msg = f"Success: {msg} {full_path}"
             print(f"[Txt2Combo Writer] {status_msg}")
             
-            return {"ui": { "text": [] }, "result": ("*")}
+            return {
+                "ui": {
+                    "status": {"text": "Success", "color": "var(--input-text)", "title": status_msg}
+                },
+                "result": ("*",)
+            }
 
         except Exception as e:
-            return {"ui": {"text": []}, "result": ("*")}
+            raise ValueError(f"Write Error: {e}")
 
 
 # --- DYNAMIC READER NODE LOGIC ---
@@ -309,35 +516,79 @@ class Txt2ComboBase:
     CATEGORY = "IMGNR"
 
     def select_item(self, **kwargs):
+        # 1. Setup Context
         node_data = getattr(self, "node_data", {})
-        results = []
+        sections = node_data.get("sections", {})
+        concats = node_data.get("concats", [])
+        
+        # 'context' holds the resolved values for every column (even hidden ones)
+        context = {} 
+
+        # 2. Process Standard Inputs (Combos & Fields)
         for section_key in self.section_order:
-            section_info = node_data.get(section_key)
+            section_info = sections.get(section_key)
             if not section_info: continue
 
-            selected_value = kwargs.get(section_key, "")
-            found_row = None
-            for row in section_info['data_rows']:
-                if row[0] == selected_value:
-                    found_row = row
-                    break
-            
             columns = section_info['columns']
-            if found_row:
+            
+            # Determine if this section is a Combo (has rows) or Widget (no rows)
+            if len(section_info['data_rows']) > 0:
+                # --- Combo Logic ---
+                selected_value = kwargs.get(section_key, "")
+                found_row = None
+                for row in section_info['data_rows']:
+                    if row[0] == selected_value:
+                        found_row = row
+                        break
+                
                 for i, col_def in enumerate(columns):
-                    col_type = col_def[1]
-                    if i < len(found_row):
-                        val = convert_value(found_row[i], col_type)
-                    else:
-                        val = col_def[2] 
-                    results.append(val)
+                    col_type = col_def['type'].replace("TEXTBOX", "STRING") # Treat textbox as string
+                    val = col_def['default']
+                    if found_row and i < len(found_row):
+                        val = found_row[i]
+                    
+                    context[col_def['name']] = convert_value(val, col_type)
             else:
-                for col_def in columns:
-                    results.append(col_def[2])
+                # --- Widget Logic ---
+                # For sections with no rows, we expect the User Input to provide the value
+                # The input name corresponds to the section key (first column name)
+                input_val = kwargs.get(section_key, "")
+                
+                # Store the primary input value
+                primary_col = columns[0]
+                context[primary_col['name']] = convert_value(input_val, primary_col['type'].replace("TEXTBOX", "STRING"))
+
+        # 3. Process Concatenations
+        for cat in concats:
+            parts = cat['parts']
+            final_str = ""
+            for p in parts:
+                p = p.strip()
+                if p.startswith('"') and p.endswith('"'):
+                    # Literal String "..."
+                    final_str += p[1:-1]
+                elif p.startswith("[") and p.endswith("]"):
+                    # Variable Reference [...]
+                    ref_name = p[1:-1]
+                    if ref_name in context:
+                        final_str += str(context[ref_name])
+                # ignore other formats as per instruction
+            context[cat['name']] = final_str
+
+        # 4. Map Context to Outputs
+        # We must return values in the exact order of RETURN_NAMES
+        results = []
+        for name in self.output_names_ordered:
+            results.append(context.get(name, ""))
+            
         return tuple(results)
 
 def parse_file_to_sections(file_path):
-    parsed = { "order": [], "sections": {} }
+    parsed = { 
+        "order": [], # Order of sections (widgets)
+        "sections": {}, 
+        "concats": [] 
+    }
     if not os.path.exists(file_path): return parsed
 
     try:
@@ -350,37 +601,56 @@ def parse_file_to_sections(file_path):
     
     for line in lines:
         line = line.strip()
-        if not line: continue
-        if line.startswith("#"): continue 
+        if not line or line.startswith("#"): continue
 
         if line.startswith("["):
-            parts = [p.strip() for p in line.split(";") if p.strip()]
-            if parts[0].startswith("[") and parts[0].endswith("]"):
-                raw_header_1 = parts[0][1:-1]
-                col1_name, _, _ = parse_type_def(raw_header_1)
+            parts = split_line_respecting_brackets(line)
+            
+            # CHECK FOR CONCAT: [concat=Name]
+            first_part_lower = parts[0].lower()
+            if first_part_lower.startswith("[concat="):
+                # Parse Concat Definition
+                def_str = parts[0][1:-1] # remove []
+                _, name = def_str.split("=", 1)
+                name = name.strip()
                 
-                current_section_name = col1_name
-                parsed["order"].append(current_section_name)
-                parsed["sections"][current_section_name] = {
-                    "columns": [], "dropdown_options": [], "data_rows": []
-                }
-                for p in parts:
-                    if p.startswith("[") and p.endswith("]"):
-                        parsed["sections"][current_section_name]["columns"].append(parse_type_def(p[1:-1]))
-                    else:
-                        parsed["sections"][current_section_name]["columns"].append(parse_type_def(p))
+                parsed["concats"].append({
+                    "name": name,
+                    "parts": parts[1:], # remaining parts are the concat elements
+                    "visible": True
+                })
+                current_section_name = None # Reset context
                 continue
 
-        if current_section_name is None:
+            # CHECK FOR SECTION
+            # It is a section header. Parse columns.
+            if parts[0].startswith("[") and parts[0].endswith("]"):
+                cols_defs = [parse_type_def(p) for p in parts]
+                
+                current_section_name = cols_defs[0]['name']
+                parsed["order"].append(current_section_name)
+                parsed["sections"][current_section_name] = {
+                    "columns": cols_defs,
+                    "dropdown_options": [],
+                    "data_rows": []
+                }
+                continue
+
+        # DATA ROWS
+        if current_section_name:
+            row_values = [v.strip() for v in line.split(";")]
+            if row_values:
+                parsed["sections"][current_section_name]["dropdown_options"].append(row_values[0])
+                parsed["sections"][current_section_name]["data_rows"].append(row_values)
+        elif not parsed["order"] and not parsed["concats"]:
+            # Fallback for files without headers (legacy support/robustness)
             current_section_name = default_section
             parsed["order"].append(current_section_name)
             parsed["sections"][current_section_name] = {
-                "columns": [(default_section, "STRING", "")],
+                "columns": [{"name": default_section, "type": "STRING", "default": "", "visible": True}],
                 "dropdown_options": [], "data_rows": []
             }
-            
-        row_values = [v.strip() for v in line.split(";")]
-        if row_values:
+            row_values = [v.strip() for v in line.split(";")]
             parsed["sections"][current_section_name]["dropdown_options"].append(row_values[0])
             parsed["sections"][current_section_name]["data_rows"].append(row_values)
 
@@ -391,38 +661,76 @@ def create_dynamic_node(filename_with_ext):
     file_path = os.path.join(target_dir, filename_with_ext)
     parsed_data = parse_file_to_sections(file_path)
     
-    if not parsed_data["order"]:
+    # Validation / Default
+    if not parsed_data["order"] and not parsed_data["concats"]:
         parsed_data = {
             "order": ["Error"],
             "sections": {
                 "Error": {
-                    "columns": [("Error", "STRING", "")],
+                    "columns": [{"name": "Error", "type": "STRING", "default": "", "visible": True}],
                     "dropdown_options": ["File Empty or Invalid"],
                     "data_rows": [["File Empty or Invalid"]]
                 }
-            }
+            },
+            "concats": []
         }
 
     all_return_types = []
     all_return_names = []
     real_types_for_desc = []
-
+    
+    # 1. Build Outputs from Sections
     for section_key in parsed_data["order"]:
         sec = parsed_data["sections"][section_key]
         for col in sec["columns"]:
-            all_return_names.append(col[0])
-            all_return_types.append(ANY) 
-            real_types_for_desc.append(col[1])
+            if col['visible']:
+                all_return_names.append(col['name'])
+                all_return_types.append(ANY)
+                real_types_for_desc.append(col['type'])
+
+    # 2. Build Outputs from Concats
+    for cat in parsed_data["concats"]:
+        if cat['visible']:
+            all_return_names.append(cat['name'])
+            all_return_types.append(ANY)
+            real_types_for_desc.append("STRING")
 
     def input_types_method(cls):
         current_data = parse_file_to_sections(file_path)
-        if not current_data["order"]:
+        if not current_data["order"] and not current_data["concats"]:
              return {"required": {"Error": (["Reload Node"],)}}
+        
         inputs = {"required": {}}
+        
         for key in current_data["order"]:
-            opts = current_data["sections"][key]["dropdown_options"]
-            if not opts: opts = ["None"]
-            inputs["required"][key] = (opts, {"default": opts[0]})
+            sec = current_data["sections"][key]
+            
+            # CHECK: Combo vs Widget
+            if len(sec["data_rows"]) > 0:
+                # COMBO MODE
+                opts = sec["dropdown_options"]
+                if not opts: opts = ["None"]
+                inputs["required"][key] = (opts, {"default": opts[0]})
+            else:
+                # WIDGET MODE (Input Fields)
+                # Use the definition of the first column for the widget type
+                col_def = sec["columns"][0]
+                t = col_def["type"]
+                d = col_def["default"]
+
+                if t == "INT":
+                    val = int(d) if d else 0
+                    inputs["required"][key] = ("INT", {"default": val, "display": "number"})
+                elif t == "FLOAT":
+                    val = float(d) if d else 0.0
+                    inputs["required"][key] = ("FLOAT", {"default": val, "display": "number"})
+                elif t == "BOOLEAN":
+                    val = (str(d).lower() == "true")
+                    inputs["required"][key] = ("BOOLEAN", {"default": val})
+                elif t == "TEXTBOX":
+                    inputs["required"][key] = ("STRING", {"multiline": True, "default": str(d)})
+                else:
+                    inputs["required"][key] = ("STRING", {"multiline": False, "default": str(d)})
         
         inputs["optional"] = {"inspect": (ANY, {"tooltip": "Connect Txt2Combo Writer"})}
         return inputs
@@ -436,11 +744,12 @@ def create_dynamic_node(filename_with_ext):
         (Txt2ComboBase,), 
         {
             "INPUT_TYPES": classmethod(input_types_method),
-            "RETURN_TYPES": tuple(all_return_types),
-            "RETURN_NAMES": tuple(all_return_names),
+            "RETURN_TYPES": tuple(all_return_types) if all_return_types else (ANY,),
+            "RETURN_NAMES": tuple(all_return_names) if all_return_names else ("none",),
             "OUTPUT_TOOLTIPS": tuple([f"{n} ({t})" for n, t in zip(all_return_names, real_types_for_desc)]),
-            "node_data": parsed_data["sections"],
-            "section_order": parsed_data["order"]
+            "node_data": parsed_data,
+            "section_order": parsed_data["order"],
+            "output_names_ordered": all_return_names
         }
     )
     return DynamicClass, internal_class_name

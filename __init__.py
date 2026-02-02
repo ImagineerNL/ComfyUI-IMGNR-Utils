@@ -12,6 +12,9 @@ from .umhanft_logic import NODE_CLASS_MAPPINGS as umhanft_mappings, NODE_DISPLAY
 # Import txt2combo
 from .txt2combo import NODE_CLASS_MAPPINGS as txt2combo_mappings, NODE_DISPLAY_NAME_MAPPINGS as txt2combo_display_mappings
 
+# Import txt2combo reconstructor
+from .txt2combo_reconstructor import NODE_CLASS_MAPPINGS as txt2comboreconstructor_mappings, NODE_DISPLAY_NAME_MAPPINGS as txt2comboreconstructor_display_mappings
+
 # Location of Javascript files
 WEB_DIRECTORY = "./js"
 
@@ -35,6 +38,10 @@ ALL_NODE_DISPLAY_NAME_MAPPINGS.update(umhanft_display_mappings)
 ALL_NODE_CLASS_MAPPINGS.update(txt2combo_mappings)
 ALL_NODE_DISPLAY_NAME_MAPPINGS.update(txt2combo_display_mappings)
 
+# Update with mappings from txt2combo reconstructor
+ALL_NODE_CLASS_MAPPINGS.update(txt2comboreconstructor_mappings)
+ALL_NODE_DISPLAY_NAME_MAPPINGS.update(txt2comboreconstructor_display_mappings)
+
 __all__ = ['ALL_NODE_CLASS_MAPPINGS', 'ALL_NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIRECTORY']
 
 # Use the final merged dict names
@@ -42,4 +49,4 @@ NODE_CLASS_MAPPINGS = ALL_NODE_CLASS_MAPPINGS
 NODE_DISPLAY_NAME_MAPPINGS = ALL_NODE_DISPLAY_NAME_MAPPINGS
 
 # UPDATED print statement
-print("### Loading Custom Nodes: IMGNR/Utils Pack (CatchEditText, PreviewImage, UMHANFT, Txt2Combo)")
+print("\033[92m### Loading Custom Nodes: IMGNR/Utils Pack (CatchEditText, PreviewImage, UMHANFT, Txt2Combo)\033[0m")
