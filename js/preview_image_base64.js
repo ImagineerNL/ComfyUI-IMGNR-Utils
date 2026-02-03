@@ -140,7 +140,7 @@ app.registerExtension({
 
                     // Button
                     const saveBtn = document.createElement("button");
-                    saveBtn.textContent = "沈 Save Now";
+                    saveBtn.textContent = "💾 Save Now";
                     Object.assign(saveBtn.style, { cursor: "pointer", fontSize: "12px", padding: "4px 10px", width: "90%" });
                     controls.appendChild(saveBtn);
                     
