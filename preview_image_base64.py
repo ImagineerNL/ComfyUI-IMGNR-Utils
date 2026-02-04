@@ -17,6 +17,7 @@ import sys
 from server import PromptServer
 from aiohttp import web
 import folder_paths
+from . import IMGNR_constants as C
 
 # --- UTILITY: SAVE FUNCTION ---
 def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, filename_extras, overwrite, embed_workflow=False, prompt=None, extra_pnginfo=None, output_dir=""):
@@ -87,7 +88,7 @@ def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, f
         return True, full_file_path, relative_path, next_counter, base_filename_no_ext
 
     except Exception as e:
-        print(f"Save Error: {e}")
+        print(f"{C.ERR_PREFIX} Save Error: {e}")
         return False, str(e), "", counter, ""
 
 # --- API: MANUAL SAVE ---
@@ -252,7 +253,7 @@ class PreviewImageAdHocSaveNode:
             })
 
         except Exception as e:
-            print(f"[PreviewImageAdHoc] Error: {e}")
+            print(f"{C.ERR_PREFIX} [PreviewImageAdHoc] Error: {e}")
         
         return {
             "ui": {"imgnr_b64_previews": ui_payload}, 
