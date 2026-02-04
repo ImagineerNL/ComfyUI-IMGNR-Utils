@@ -7,6 +7,7 @@
 import json, os, nodes, folder_paths, inspect, re
 from server import PromptServer
 from aiohttp import web
+from . import IMGNR_constants as C
 
 class UMHANFT_Logic:
     def __init__(self):
@@ -29,10 +30,10 @@ class UMHANFT_Logic:
         live_count = len(nodes.NODE_CLASS_MAPPINGS)
         db_count = len(self.signatures)
         if live_count != db_count:
-            print(f"### [UMHANFT] DB Sync Needed (Live: {live_count} vs DB: {db_count}). Scanning...")
+            print(f"{C.LOG_PREFIX} [UMHANFT] DB Sync Needed (Live: {live_count} vs DB: {db_count}). Scanning...")
             self.scan_all()
         else:
-            print(f"### [UMHANFT] Database loaded and synced ({db_count} nodes).")
+            print(f"{C.LOG_PREFIX} [UMHANFT] Database loaded and synced ({db_count} nodes).")
 
     def load_combined_db(self):
         combined = {}
@@ -92,7 +93,7 @@ class UMHANFT_Logic:
                 json.dump(user_scan, f, indent=2)
             self.signatures = self.load_combined_db()
         except Exception as e:
-            print(f"### [UMHANFT] Error writing DB to {self.user_db_path}: {e}")
+            print(f"{C.ERR_PREFIX} [UMHANFT] Error writing DB to {self.user_db_path}: {e}")
 
     def extract_tokens(self, text):
         if not text: return set()
@@ -129,10 +130,10 @@ class UMHANFT_Logic:
         prov_out = set(self.ensure_hashable(neighbors.get("provided_outputs", []))) if neighbors else set()
 
         if debug_enabled:
-            print(f"\n[UMHANFT] --- DEBUG SEARCH: {target_node_type} ---")
-            print(f"Settings -> Strict: {strict} | Connected: {strict_connected} | Min: {min_score}")
+            print(f"\n{C.WARN_PREFIX} [UMHANFT] --- DEBUG SEARCH: {target_node_type} ---")
+            print(f"{C.WARN_PREFIX} Settings -> Strict: {strict} | Connected: {strict_connected} | Min: {min_score}")
             if debug_filter:
-                print(f"Debug Filter Active: Only showing logs for '{debug_filter}'")
+                print(f"{C.WARN_PREFIX} Debug Filter Active: Only showing logs for '{debug_filter}'")
 
         for name, sig in self.signatures.items():
             if name == target_node_type: continue
@@ -174,7 +175,7 @@ class UMHANFT_Logic:
             # Junk Filter
             if name_score == 0 and not matched_unique:
                 if should_debug_this:
-                    print(f"   [REJECT] {name}: No Name Match & No Unique Type")
+                    print(f"{C.WARN_PREFIX} [REJECT] {name}: No Name Match & No Unique Type")
                 continue
 
             standard_types = {"STRING", "FLOAT", "INT", "BOOLEAN", "COMBO"}
@@ -192,9 +193,9 @@ class UMHANFT_Logic:
                 if prov_out.intersection(sig_in): score += 25
 
             if should_debug_this:
-                print(f"   >>> EVAL: {name}")
-                print(f"       Passed Strict? {passed_strict} | Raw Score: {score}")
-                print(f"       Tokens Shared: {common_tokens}")
+                print(f"{C.WARN_PREFIX} >>> EVAL: {name}")
+                print(f"{C.WARN_PREFIX} Passed Strict? {passed_strict} | Raw Score: {score}")
+                print(f"{C.WARN_PREFIX} Tokens Shared: {common_tokens}")
 
             if not passed_strict: continue
 
@@ -229,10 +230,10 @@ class UMHANFT_Logic:
         final_results.sort(key=lambda x: (-x["raw_score"], x["raw_name"]))
 
         if debug_enabled and not debug_filter:
-            print(f"[UMHANFT] Max Raw Score: {max_score}")
-            print("Top 3 Candidates:")
+            print(f"{C.WARN_PREFIX} [UMHANFT] Max Raw Score: {max_score}")
+            print(f"{C.WARN_PREFIX} Top 3 Candidates:")
             for r in final_results[:3]:
-                print(f"   -> {r['display']} (Rel: {r['score']}%)")
+                print(f"{C.WARN_PREFIX}   -> {r['display']} (Rel: {r['score']}%)")
 
         return final_results[:max_alts]
 

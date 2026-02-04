@@ -1,9 +1,12 @@
-# IMGNR Utils /__init__.py
+# IMGNR Utils / __init__.py
 
-# Import 1st node
+# Import constants
+from . import IMGNR_constants as C
+
+# Import Catch Edit Text
 from .catch_edit_text import NODE_CLASS_MAPPINGS as catch_edit_mappings, NODE_DISPLAY_NAME_MAPPINGS as catch_edit_display_mappings
 
-# Import 2nd node
+# Import Preview Image 
 from .preview_image_base64 import NODE_CLASS_MAPPINGS as preview_b64_mappings, NODE_DISPLAY_NAME_MAPPINGS as preview_b64_display_mappings
 
 # Import umhanft nodes
@@ -48,5 +51,5 @@ __all__ = ['ALL_NODE_CLASS_MAPPINGS', 'ALL_NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIR
 NODE_CLASS_MAPPINGS = ALL_NODE_CLASS_MAPPINGS
 NODE_DISPLAY_NAME_MAPPINGS = ALL_NODE_DISPLAY_NAME_MAPPINGS
 
-# UPDATED print statement
-print("\033[92m### Loading Custom Nodes: IMGNR/Utils Pack (CatchEditText, PreviewImage, UMHANFT, DIY Nodes)\033[0m")
+# Print statement 
+print(f"{C.LOG_PREFIX} Loaded: Split Screen, CatchEditText, PreviewImage, UMightHaveANodeForThat, DIY Nodes")

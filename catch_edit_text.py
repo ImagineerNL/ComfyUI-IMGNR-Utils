@@ -2,6 +2,10 @@
 # Version: Status Color + Toggle + Tooltips
 # Support Soft + Hard Mute
 
+import concurrent.futures
+from . import IMGNR_constants as C
+
+
 class CatchEditTextNode:
     DESCRIPTION = """
     Catches text from input and displays it the textbox.
@@ -103,6 +107,28 @@ class CatchEditTextNode:
 
     # --- Main Processing Function ---
     def process_text(self, editable_text_widget, action, use_status_color, unique_id=None, extra_pnginfo=None, input_text=None):
+        # Safe fallback: get current widget text immediately
+        curr_widget_text = editable_text_widget[0] if isinstance(editable_text_widget, list) else editable_text_widget
+
+        try:
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                # Submit the core logic to the thread pool
+                future = executor.submit(
+                    self._process_text_core, 
+                    editable_text_widget, 
+                    action, 
+                    use_status_color, 
+                    unique_id, 
+                    extra_pnginfo, 
+                    input_text
+                )
+                # Wait for result with a 10s timeout
+                return future.result(timeout=10)
+        except concurrent.futures.TimeoutError:
+            print(f"{C.WARN_PREFIX} [CatchEditTextNode] Execution timed out (10s). Gracefully returning current widget text.")
+            return {"ui": {"text": [str(curr_widget_text)]}, "result": (str(curr_widget_text),)}
+
+    def _process_text_core(self, editable_text_widget, action, use_status_color, unique_id=None, extra_pnginfo=None, input_text=None):
         
         curr_action = action[0] if isinstance(action, list) else action
         curr_widget_text = editable_text_widget[0] if isinstance(editable_text_widget, list) else editable_text_widget
@@ -118,11 +144,11 @@ class CatchEditTextNode:
         if curr_action == "use_input":
             output_text = effective_input_text
             text_for_widget_update = output_text
-            print(f"{class_name_log} Mode: Input.")
+            print(f"{C.LOG_PREFIX} {class_name_log} Mode: Input.")
         
         else:
             output_text = curr_widget_text
-            print(f"{class_name_log} Mode: Edit ({curr_action}).")
+            print(f"{C.LOG_PREFIX} {class_name_log} Mode: Edit ({curr_action}).")
 
         # --- UI Update Logic ---
         if text_for_widget_update is not None and unique_id and extra_pnginfo:

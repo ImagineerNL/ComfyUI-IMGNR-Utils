@@ -11,6 +11,7 @@ from aiohttp import web
 import importlib
 import sys
 import shutil
+from . import IMGNR_constants as C
 
 # Import the core logic to trigger hot-reloading
 try:
@@ -25,10 +26,6 @@ TARGET_DIR = os.path.join(folder_paths.get_user_directory(), "IMGNR_Utils", "DIY
 # Define the local library path (inside the custom node folder)
 CURRENT_NODE_DIR = os.path.dirname(os.path.abspath(__file__))
 LOCAL_LIBRARY_DIR = os.path.join(CURRENT_NODE_DIR, "DIY-node-library")
-
-# --- LOG Colors ---
-CSTART = '\033[91m'
-CEND = '\033[0m'
 
 # --- UTILS ---
 def sanitize_filename(filename):
@@ -172,7 +169,7 @@ async def reconstruct_do(request):
             
         except Exception as e:
             # FALLBACK TO SCRATCH
-            print(CSTART + f"[DIY Nodes] Download failed ({e}), attempting scratch creation." + CEND)
+            print(f"{C.WARN_PREFIX} [DIY Nodes] Download failed ({e}), attempting scratch creation.")
             success, err = create_placeholder(file_path, filename, headers)
             if success:
                 msg = f"{filename} not found on github, trying to recreate from scratch."
@@ -194,6 +191,7 @@ async def reconstruct_do(request):
 
     # 4. FINAL RESPONSE
     final_msg = "Node restored; ComfyUI server needs to be restarted for node to be loaded; values and sections might still mismatch due to customizations by workflow owner."
+    print(f"{C.WARN_PREFIX} DIY {final_msg}")
     return web.json_response({"success": True, "message": final_msg})
 
 class DIYReconstructor:

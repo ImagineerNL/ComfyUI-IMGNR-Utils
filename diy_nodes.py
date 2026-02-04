@@ -10,21 +10,17 @@ import re
 import json
 from server import PromptServer
 from aiohttp import web
+from . import IMGNR_constants as C
 
 # --- SETUP PATHS ---
 comfy_user_dir = folder_paths.get_user_directory()
 target_dir = os.path.join(comfy_user_dir, "IMGNR_Utils", "DIY-nodes")
 
-# --- LOG Colors ---
-CSTART = '\033[91m'
-CEND = '\033[0m'
-# Example print(CSTART + "Error, does not compute!" + CEND)
-
 if not os.path.exists(target_dir):
     try:
         os.makedirs(target_dir, exist_ok=True)
     except Exception as e:
-        print(CSTART + f"[DIY Nodes] Error creating directory: {e}" + CEND)
+        print(f"{C.ERR_PREFIX} [DIY Nodes] Error creating directory: {e}")
 
 # --- GLOBAL REGISTRY FOR API SECURITY ---
 CLASS_TO_FILE_MAP = {}
@@ -265,7 +261,7 @@ def create_or_update_example(filename, content_list):
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write("\n".join(content_list))
     except Exception as e:
-        print(CSTART + f"[DIY Nodes] Error writing example file {filename}: {e}" + CEND)
+        print(f"{C.ERR_PREFIX} [DIY Nodes] Error writing example file {filename}: {e}")
 
 create_or_update_example("example.txt", [
     "# Example node!! Will reset on launch!!",
@@ -311,8 +307,8 @@ create_or_update_example("example.txt", [
     "# NOTES:",
     "# Adding new files or [Sections] requires a Server Restart to update the node output slots.",
     "# Editing items inside existing sections only requires a Refresh (R).",
-    "# You can find more examples in custom_nodes\ComfyUI-IMGNR-Utils\DIY-node-library.",
-    "# Copy them to User>IMGNR-Utils>DIY-nodes to edit and use."
+    "# You can find more examples in custom_nodes/ComfyUI-IMGNR-Utils/DIY-node-library.",
+    "# Copy them to User/IMGNR-Utils/DIY-nodes to edit and use."
 ])
 
 # --- API ENDPOINTS ---
@@ -344,14 +340,13 @@ async def save_diy_node(request):
         is_valid, errors = validate_text_content(content)
         if not is_valid:
             error_msg = "\n".join(errors)
-            # This print ensures it shows up in ComfyUI Console
-            print(CSTART + f"\n[DIY Nodes] Validation Failed:\n{error_msg}\n" + CEND, flush=True)
+            print(f"\n{C.ERR_PREFIX} [DIY Nodes] Validation Failed:\n{error_msg}\n", flush=True)
             return web.json_response({"success": False, "message": error_msg})
 
         # 2. Sanitize
         final_filename = re.sub(r'[^\w\-. ]', '', filename)
         if not final_filename: 
-            print(CSTART + f"\n[DIY Nodes] Write Failed: Invalid Filename" + CEND, flush=True)
+            print(f"\n{C.ERR_PREFIX} [DIY Nodes] Write Failed: Invalid Filename", flush=True)
             return web.json_response({"success": False, "message": "Write Failed: Invalid filename"})
             
         if not final_filename.lower().endswith(".txt"):
@@ -359,15 +354,15 @@ async def save_diy_node(request):
 
         full_path = os.path.abspath(os.path.join(target_dir, final_filename))
         if not full_path.startswith(os.path.abspath(target_dir)):
-            print(CSTART + f"\n[DIY Nodes] Write Failed: Unwanted Path traversal detected" + CEND, flush=True)
+            print(f"\n{C.ERR_PREFIX} [DIY Nodes] Write Failed: Unwanted Path traversal detected", flush=True)
             return web.json_response({"success": False, "message": "Unwanted Path traversal detected"})
 
         # 3. Check Existing
         is_new_file = not os.path.exists(full_path)
         
-        # NEW SAFETY CHECK
+        # SAFETY CHECK
         if not is_new_file and mode == "populate":
-            print(CSTART + f"\n[DIY Nodes] Write Failed: File exists. Change filename or use Overwrite/Append." + CEND, flush=True)
+            print(f"\n{C.ERR_PREFIX} [DIY Nodes] Write Failed: File exists. Change filename or use Overwrite/Append.", flush=True)
             return web.json_response({
                 "success": False, 
                 "message": "Write Failed: File exists. Change filename or use Overwrite/Append."
@@ -477,9 +472,9 @@ class DIYNodeWriter:
         is_valid, errors = validate_text_content(content)
         if not is_valid:
             error_msg = "\n".join(errors)
-            print(CSTART + f"\n[DIY Nodes] Validation Failed during execution:\n{error_msg}\n" + CEND, flush=True)
+            print(f"\n{C.ERR_PREFIX} [DIY Nodes] Validation Failed during execution:\n{error_msg}\n", flush=True)
             # RAISE EXCEPTION TO SHOW MODAL
-            raise ValueError(CSTART + f"DIY Node Writer Validation Failed:\n{error_msg}" +CEND)
+            raise ValueError(f"DIY Node Writer Validation Failed:\n{error_msg}")
 
         # Write/Append
         new_lines = [line.strip() for line in content.splitlines() if line.strip()]
@@ -503,7 +498,7 @@ class DIYNodeWriter:
                 msg = "Overwrote"
 
             status_msg = f"Success: {msg} {full_path}"
-            print(CSTART + f"[DIY Nodes] {status_msg}" + CEND)
+            print(f"\n{C.LOG_PREFIX} [DIY Nodes] {status_msg}")
             
             return {
                 "ui": {
@@ -513,7 +508,7 @@ class DIYNodeWriter:
             }
 
         except Exception as e:
-            raise ValueError(CSTART + f"DIY Node Writer - Write Error: {e}" + CEND)
+            raise ValueError(f"DIY Node Writer - Write Error: {e}")
 
 
 # --- DYNAMIC READER NODE LOGIC ---
