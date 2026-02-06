@@ -2,6 +2,7 @@
 // Fixes: Transparant (RGBA) images (+ mask in/out)
 // Fixes: Widget background now same as template node color
 // Fixes: Zero size widget on spawn due to no image (using placeholder)
+// Fixes: Manual Save now prioritizes Connected Inputs over Widgets
 // New: Adhoc Save Node
 // Updated: Renamed Sequence to Counter
 
@@ -177,11 +178,36 @@ app.registerExtension({
                         if (!data || !data.uri) return;
                         saveBtn.textContent = "Saving..."; saveBtn.disabled = true;
                         
-                        const getVal = (n) => this.widgets.find(w => w.name === n)?.value;
+                        // Helper: Determine value source (Connected Input > Widget > Fallback)
+                        const getVal = (name) => {
+                            // 1. If Input Slot exists and is CONNECTED, use execution params
+                            const inputSlot = this.inputs?.find(i => i.name === name);
+                            if (inputSlot && inputSlot.link !== null) {
+                                if (data.params && data.params[name] !== undefined) {
+                                    return data.params[name];
+                                }
+                            }
+
+                            // 2. If Widget exists (and input not connected), use it
+                            const widget = this.widgets?.find(w => w.name === name);
+                            if (widget) return widget.value;
+                            
+                            // 3. Fallback: If no widget (e.g. converted but lost link?)
+                            if (data.params && data.params[name] !== undefined) return data.params[name];
+                            
+                            return undefined;
+                        };
+
+                        // Counter is special: usually want the one from execution, unless updated
+                        let counterVal = getVal("counter");
+                        if (counterVal === undefined && data.current_counter !== undefined) {
+                            counterVal = data.current_counter;
+                        }
+
                         const payload = {
                             image: data.uri,
                             filename_main: getVal("filename_main"),
-                            counter: getVal("counter"),
+                            counter: counterVal,
                             add_counter: getVal("add_counter"),
                             filename_extras: getVal("filename_extras"),
                             overwrite: getVal("overwrite")
@@ -192,6 +218,7 @@ app.registerExtension({
                             const result = await resp.json();
                             if (result.success) {
                                 saveBtn.textContent = "Saved!";
+                                // Update counter widget if it exists
                                 const cntWidget = this.widgets.find(w => w.name === "counter");
                                 if (cntWidget) cntWidget.value = result.new_counter;
                                 this.savedFilename = result.relative_path;
@@ -239,7 +266,10 @@ app.registerExtension({
                          const payload = {
                             uri: info.image,
                             width: info.width || 0,
-                            height: info.height || 0
+                            height: info.height || 0,
+                            // Store params for fallback
+                            params: info.params || {},
+                            current_counter: info.current_counter
                         };
                         this.persistedImageData = payload;
                         this.properties["imgnr_persist_data"] = payload;

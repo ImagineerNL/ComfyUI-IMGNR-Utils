@@ -38,6 +38,9 @@ def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, f
                     metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
         # 3. Construct Filename
+        # Handle cases where filename_main might be None coming from API fallback
+        if not filename_main: filename_main = "ComfyUI"
+
         extras_str = f"_{filename_extras}" if filename_extras and filename_extras.strip() else ""
         
         full_output_dir = folder_paths.get_output_directory()
@@ -249,7 +252,13 @@ class PreviewImageAdHocSaveNode:
                 "width": pil_img.width,
                 "height": pil_img.height,
                 "current_counter": current_cnt,
-                "saved_filename": saved_rel_path 
+                "saved_filename": saved_rel_path,
+                "params": {
+                    "filename_main": filename_main,
+                    "filename_extras": filename_extras,
+                    "add_counter": add_counter,
+                    "overwrite": overwrite
+                }
             })
 
         except Exception as e:

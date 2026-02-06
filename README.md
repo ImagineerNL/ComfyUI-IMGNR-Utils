@@ -6,7 +6,7 @@
 >
 > * Don't re-invent the wheel.
 > * Make ComfyUI easier to use, not harder.
-> * Solve actual workflow bottlenecks with minimal external dependencies.
+> * Solve actual workflow bottlenecks and annoyances.
 > * Minimal Change, Maximum Effect.
 > * ZERO new requirements to mess up your install
 
@@ -22,7 +22,7 @@
   - [5. Node Matcher ("U Might Have A Node For That")](#5-node-matcher-u-might-have-a-node-for-that)
   - [6. DIY-Nodes (Previously Txt2Combo nodes)](#6-diy-nodes-previously-txt2combo-nodes)
 - [📥 Installation](#-installation)
-- [📋 ChangeLog (V3.2.3)](#-changelog-v323)
+- [📋 ChangeLog (V3.2.4)](#-changelog-v324)
 - [⚠️ Disclaimer \& Credits](#️-disclaimer--credits)
   - [Credits \& Inspiration](#credits--inspiration)
   - [Definitely worth checking out](#definitely-worth-checking-out)
@@ -165,7 +165,7 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
   comfy node registry-install ComfyUI-IMGNR-Utils
 ```
 
-## 📋 ChangeLog (V3.2.3)
+## 📋 ChangeLog (V3.2.4)
 
 | Version | | Notable Changes |
 | :-------------: | :-------------: | :------------- |
