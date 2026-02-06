@@ -20,8 +20,9 @@ _Audio; _Audio
 # String inputfield for Subdirectory (no output connector)
 [Subdir;output=false]
 # Concat output directory Linux and Windows
-[concat=SaveDir];[Dir];[sep];[Subdir];[sep]
-[concat=SaveDir+Filename];[Dir];[sep];[Subdir];[sep];[Filename]
+# Only outpit subdir if present
+[concat=SaveDir];[Dir];[sep];{[Subdir];[sep]}
+[concat=SaveDir+Filename];[Dir];[sep];{[Subdir];[sep]};[Filename]
 # String inputfield for filename
 [Filename]
 [System;output=false];[sep;output=false]

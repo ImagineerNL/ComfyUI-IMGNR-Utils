@@ -22,7 +22,7 @@
   - [5. Node Matcher ("U Might Have A Node For That")](#5-node-matcher-u-might-have-a-node-for-that)
   - [6. DIY-Nodes (Previously Txt2Combo nodes)](#6-diy-nodes-previously-txt2combo-nodes)
 - [📥 Installation](#-installation)
-- [📋 ChangeLog (V3.2.2)](#-changelog-v322)
+- [📋 ChangeLog (V3.2.3)](#-changelog-v323)
 - [⚠️ Disclaimer \& Credits](#️-disclaimer--credits)
   - [Credits \& Inspiration](#credits--inspiration)
   - [Definitely worth checking out](#definitely-worth-checking-out)
@@ -165,7 +165,7 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
   comfy node registry-install ComfyUI-IMGNR-Utils
 ```
 
-## 📋 ChangeLog (V3.2.2)
+## 📋 ChangeLog (V3.2.3)
 
 | Version | | Notable Changes |
 | :-------------: | :-------------: | :------------- |
