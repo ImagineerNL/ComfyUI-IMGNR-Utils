@@ -41,12 +41,15 @@ ANY = AnyType("*")
 def split_line_respecting_brackets(line):
     parts = []
     buffer = ""
-    balance = 0
+    balance_sq = 0 # []
+    balance_cur = 0 # {}
     for char in line:
-        if char == "[": balance += 1
-        elif char == "]": balance -= 1
+        if char == "[": balance_sq += 1
+        elif char == "]": balance_sq -= 1
+        elif char == "{": balance_cur += 1
+        elif char == "}": balance_cur -= 1
         
-        if char == ";" and balance == 0:
+        if char == ";" and balance_sq == 0 and balance_cur == 0:
             if buffer.strip(): parts.append(buffer.strip())
             buffer = ""
         else:
@@ -106,9 +109,9 @@ def validate_text_content(content):
         
         # A. HEADERS
         if line.startswith("["):
-            # Bracket Balance
+            # Bracket Balance (Basic check)
             if line.count("[") != line.count("]"):
-                errors.append(f"Line {i+1}: Unbalanced brackets.")
+                errors.append(f"Line {i+1}: Unbalanced square brackets.")
                 continue
                 
             parts = split_line_respecting_brackets(line)
@@ -117,12 +120,16 @@ def validate_text_content(content):
             if parts[0].lower().startswith("[concat="):
                 for k in range(1, len(parts)):
                     p = parts[k].strip()
-                    if p.startswith("[") and p.endswith("]"):
+                    if p.startswith("{") and p.endswith("}"):
+                        # Conditional Block - Just rudimentary check for now
+                        if p.count("[") != p.count("]"):
+                             errors.append(f"Line {i+1}: Unbalanced brackets inside conditional block '{p}'.")
+                    elif p.startswith("[") and p.endswith("]"):
                         ref = p[1:-1].strip()
                         if ref not in defined_names:
                             errors.append(f"Line {i+1}: Unknown reference '{ref}' in concat.")
                     elif not (p.startswith('"') and p.endswith('"')):
-                        errors.append(f"Line {i+1}: Invalid concat part '{p}'. Must be [Ref] or \"Text\".")
+                        errors.append(f"Line {i+1}: Invalid concat part '{p}'. Must be [Ref], {{Conditional}} or \"Text\".")
                 inside_section = False
                 continue
             
@@ -292,7 +299,8 @@ create_or_update_example("example.txt", [
     "",
     "# creates an output 'fullname' which sends the content of the inputfields", 
     "[concat=fullname];[firstname];\" \";[lastname];\"_nr\";[number]",
-    "# 'firstname lastname_nrnumber' could be 'John Doe_nr3'", 
+    "# Conditional concat: The part inside {} is only added if [lastname] is not empty",
+    "[concat=conditional_example];[firstname];{ \"_\"; [lastname] }",
     "# ",
     "# USAGE:",    
     "# Files are stored in User>IMGNR-Utils>DIY-nodes",
@@ -518,18 +526,32 @@ class DIYNodeBase:
     CATEGORY = "IMGNR/DIY nodes"
 
     def select_item(self, **kwargs):
-        # 1. Setup Context
-        node_data = getattr(self, "node_data", {})
-        sections = node_data.get("sections", {})
-        concats = node_data.get("concats", [])
+        # 1. LIVE RELOAD: Parse the file again to get latest values
+        # We use the internal filename mapped to this class
+        filename_with_ext = CLASS_TO_FILE_MAP.get(self.__class__.__name__, "")
+        file_path = os.path.join(target_dir, filename_with_ext)
+        
+        # Parse the latest data
+        # Note: We can only update values. Structure (input/output slots) is fixed at startup.
+        # We will use the 'current_data' to look up values, but rely on self.section_order for the "slots".
+        current_data = parse_file_to_sections(file_path)
+        sections = current_data.get("sections", {})
+        concats = current_data.get("concats", [])
         
         # 'context' holds the resolved values for every column (even hidden ones)
         context = {} 
 
         # 2. Process Standard Inputs (Combos & Fields)
         for section_key in self.section_order:
+            # We look for the section in the LATEST parsed data
             section_info = sections.get(section_key)
-            if not section_info: continue
+            
+            # Fallback if section was deleted in text file but node expects it: 
+            # use defaults from startup config or empty
+            if not section_info: 
+                # Try to fallback to initial startup data if available, else skip
+                section_info = self.node_data.get("sections", {}).get(section_key)
+                if not section_info: continue
 
             columns = section_info['columns']
             
@@ -561,24 +583,68 @@ class DIYNodeBase:
                 context[primary_col['name']] = convert_value(input_val, primary_col['type'].replace("TEXTBOX", "STRING"))
 
         # 3. Process Concatenations
+        # Use latest concat definitions from file (formulas can change without restart)
+        # However, we must map them to the OUTPUT NAMES fixed at startup.
+        
+        # Create a map of {output_name: concat_def} from the NEW data
+        new_concat_map = {c['name']: c for c in concats}
+        
+        # We iterate over the output names expected by the Node (self.output_names_ordered)
+        # to ensure we don't break the return tuple order.
+        # But we fill context using the new formulas.
+        
+        # First, ensure all new concat definitions are processed into context
         for cat in concats:
             parts = cat['parts']
             final_str = ""
             for p in parts:
                 p = p.strip()
-                if p.startswith('"') and p.endswith('"'):
-                    # Literal String "..."
+                
+                # --- BLOCK A: Conditional { ... } ---
+                if p.startswith("{") and p.endswith("}"):
+                    # Strip { }
+                    block_content = p[1:-1]
+                    # Split inner content by semicolon
+                    # We reuse split_line... but essentially we just need parts
+                    # For simplicity assuming no nested brackets inside the condition block for now
+                    block_parts = [s.strip() for s in block_content.split(";") if s.strip()]
+                    
+                    block_result_str = ""
+                    include_block = True
+                    
+                    for sub in block_parts:
+                        sub_val = ""
+                        if sub.startswith('"') and sub.endswith('"'):
+                            sub_val = sub[1:-1]
+                        elif sub.startswith("[") and sub.endswith("]"):
+                            ref_name = sub[1:-1]
+                            val = context.get(ref_name, "")
+                            sub_val = str(val)
+                            # CRITICAL CHECK: If any variable in the block is empty string, ABORT block
+                            if sub_val == "":
+                                include_block = False
+                                break
+                        
+                        block_result_str += sub_val
+                    
+                    if include_block:
+                        final_str += block_result_str
+
+                # --- BLOCK B: Standard String "..." ---
+                elif p.startswith('"') and p.endswith('"'):
                     final_str += p[1:-1]
+                
+                # --- BLOCK C: Standard Variable [...] ---
                 elif p.startswith("[") and p.endswith("]"):
-                    # Variable Reference [...]
                     ref_name = p[1:-1]
                     if ref_name in context:
                         final_str += str(context[ref_name])
+                
                 # ignore other formats as per instruction
             context[cat['name']] = final_str
 
         # 4. Map Context to Outputs
-        # We must return values in the exact order of RETURN_NAMES
+        # We must return values in the exact order of RETURN_NAMES defined at startup
         results = []
         for name in self.output_names_ordered:
             results.append(context.get(name, ""))
