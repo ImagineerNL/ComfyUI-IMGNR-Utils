@@ -19,10 +19,12 @@
   - [2. Catch \& Edit Text](#2-catch--edit-text)
   - [3. Preview Image (No Save)](#3-preview-image-no-save)
   - [4. Preview Image (Ad-Hoc Save)](#4-preview-image-ad-hoc-save)
-  - [5. Node Matcher ("U Might Have A Node For That")](#5-node-matcher-u-might-have-a-node-for-that)
-  - [6. DIY-Nodes (Previously Txt2Combo nodes)](#6-diy-nodes-previously-txt2combo-nodes)
+  - [5. Preview Compare Lastgen](#5-preview-compare-lastgen)
+  - [6. Node Matcher ("U Might Have A Node For That")](#6-node-matcher-u-might-have-a-node-for-that)
+  - [7. DIY-Nodes (Previously Txt2Combo nodes)](#7-diy-nodes-previously-txt2combo-nodes)
+  - [8. ABBA Switch](#8-abba-switch)
 - [📥 Installation](#-installation)
-- [📋 ChangeLog (V3.2.4)](#-changelog-v324)
+- [📋 ChangeLog (V3.3.0)](#-changelog-v330)
 - [⚠️ Disclaimer \& Credits](#️-disclaimer--credits)
   - [Credits \& Inspiration](#credits--inspiration)
   - [Definitely worth checking out](#definitely-worth-checking-out)
@@ -97,7 +99,21 @@ Behaves like the "No Save" node by default (images are disposable), but gives yo
 
 ---
 
-### 5. Node Matcher ("U Might Have A Node For That")
+### 5. Preview Compare Lastgen
+
+**Compare your image against last run.** *(Nodes 2.0 compatible)*
+
+Partly a clone of Ad-hoc Save, but has comparison tools built in. Regular A/B compare already exists as nodes; this one compares against previous generated image. 
+
+* **Preview Ad-hoc Plus:** Same features, and more.
+* **Compare against last Gen:** Easy slider to compare with reference and see the differences with new seed or new prompt.
+* **Blink and workflow info:** Quick blink the reference for 'at a glance' comparison. Check the workflow info for changes in the workflow.
+
+![Preview Compare Lastgen Example](img/Compare_Lastgen_1.png)
+
+---
+
+### 6. Node Matcher ("U Might Have A Node For That")
 
 **Stop installing duplicate node packs.** *(Nodes 2.0 compatible)*
 
@@ -116,7 +132,7 @@ When loading workflows from CivitAI or Reddit, you often see missing nodes. This
 
 ---
 
-### 6. DIY-Nodes (Previously Txt2Combo nodes)
+### 7. DIY-Nodes (Previously Txt2Combo nodes)
 
 **Build your own dynamic nodes** *(Nodes 2.0 compatible)*
 
@@ -136,13 +152,26 @@ You can use comboboxes, `STRING`, `TEXTBOX`, `INT`, `FLOAT` and even `concat` di
 * **Build your own path:** By combining comboboxes and inputfields you can create your own path for example for consistent file saving.
 ![DIY Usecase](img/DIY-nodes-savedirs.png)
 
-
 > ***NOTE:***
 >
 > - *Editing items inside existing sections only requires a Refresh (R).*
 > - *Adding new files (Nodes) or `[Sections]` requires a Server Restart to update the nodes. (`filename` --> Node Name: `DIY: Filename`)*
 > - More examples in the examples folder [DIY-node-library](./DIY-node-library/) or in the Example Workflows in ComfyUI
 > - Will try to find missing DIY nodes in the node-library; feel free to submit your own by adding an Issue here.
+
+---
+
+### 8. ABBA Switch
+
+**Switch AB to BA** *(Nodes 2.0 compatible)*
+
+Not much to it.... just swap any 2 inputs
+
+* **SWAP** Swap ANY 2 inputs (must be same type)
+* **Why** Quickly switch Width/Height, Positive/Negative, etc.
+* **Toggle** Toggle the Swap on or off.
+  
+![ABBA Switch Usecase](img/ABBA_Switch.png)
 
 ---
 
@@ -165,10 +194,11 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
   comfy node registry-install ComfyUI-IMGNR-Utils
 ```
 
-## 📋 ChangeLog (V3.2.4)
+## 📋 ChangeLog (V3.3.0)
 
-| Version | | Notable Changes |
+| Major | Minor | Notable Changes |
 | :-------------: | :-------------: | :------------- |
+| | V3.3.0 | New: Preview Compare Lastgen; New: ABBA Switch; Fix: Preview-no-save now also doesn't save to workflow |
 | | V3.2.0 | ❌ Breaking change: Txt2Combo renamed to DIY-Nodes due to extended functionality |
 | | V3.1.0 | Expanded on Txt2Combo Nodes, added save, added examples folder [Txt2Combo_Examples](./Txt2Combo_Examples/); toggle for counter in Ad-Hoc Save node.
 | V3.0.0 | | Added new Utility [Split Screen View](#1-split-screen-view) ; [Preview Image (Ad-Hoc Save)](#4-preview-image-ad-hoc-save) ; Consolidated Settings file ; UI Fixes and Cleanup/Documentation. |
