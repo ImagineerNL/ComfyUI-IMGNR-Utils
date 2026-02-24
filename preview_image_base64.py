@@ -57,6 +57,7 @@ def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, f
             path_part, filename_part = os.path.split(filename_main)
             save_path = os.path.join(full_output_dir, path_part)
         else:
+            path_part = ""
             filename_part = filename_main
             save_path = full_output_dir
 
@@ -73,13 +74,21 @@ def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, f
         file_extension = ".png"
         full_file_path = os.path.join(save_path, base_filename_no_ext + file_extension)
 
-        # 4. Handle Overwrite
-        if os.path.exists(full_file_path) and not overwrite:
-            safety_idx = 1
-            while os.path.exists(full_file_path):
-                new_base = f"{base_filename_no_ext}_{safety_idx:03d}"
-                full_file_path = os.path.join(save_path, new_base + file_extension)
-                safety_idx += 1
+        # 4. Handle Overwrite & Determine Save Status
+        final_base_name = base_filename_no_ext
+        save_status = "new"
+        
+        if os.path.exists(full_file_path):
+            if overwrite:
+                save_status = "overwritten"
+            else:
+                save_status = "saved_as"
+                safety_idx = 1
+                while os.path.exists(full_file_path):
+                    new_base = f"{base_filename_no_ext}_{safety_idx:03d}"
+                    full_file_path = os.path.join(save_path, new_base + file_extension)
+                    final_base_name = new_base
+                    safety_idx += 1
 
         # 5. Save
         img.save(full_file_path, pnginfo=metadata, compress_level=4)
@@ -90,17 +99,23 @@ def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, f
         # Increment counter ONLY if add_counter was active
         next_counter = int(counter) + 1 if add_counter else int(counter)
         
-        return True, full_file_path, relative_path, next_counter, base_filename_no_ext
+        # Construct the requested full filename string: path + final_base_name
+        if path_part:
+            returned_full_string = os.path.join(path_part, final_base_name).replace("\\", "/")
+        else:
+            returned_full_string = final_base_name
+        
+        return True, full_file_path, relative_path, next_counter, returned_full_string, save_status
 
     except Exception as e:
         print(f"{C.ERR_PREFIX} Save Error: {e}")
-        return False, str(e), "", counter, ""
+        return False, str(e), "", counter, "", "error"
 
 # --- API: MANUAL SAVE ---
 @PromptServer.instance.routes.post("/imgnr/save_manual")
 async def imgnr_save_manual(request):
     data = await request.json()
-    success, full_path, rel_path, new_cnt, base_name = save_image_to_disk(
+    success, full_path, rel_path, new_cnt, base_name, save_status = save_image_to_disk(
         image_data_base64=data.get("image"),
         filename_main=data.get("filename_main"),
         counter=data.get("counter"),
@@ -113,7 +128,8 @@ async def imgnr_save_manual(request):
         "success": success, 
         "message": full_path if success else rel_path, 
         "relative_path": rel_path,
-        "new_counter": new_cnt
+        "new_counter": new_cnt,
+        "save_status": save_status
     })
 
 
@@ -168,20 +184,16 @@ class IMGNR_Preview_Base:
         ui_payload = []
         current_cnt = counter
         saved_rel_path = None 
+        save_status = None
         
         extras_str = f"_{filename_extras}" if filename_extras and filename_extras.strip() else ""
-        
-        if "/" in filename_main or "\\" in filename_main:
-             _, fname_part = os.path.split(filename_main)
-             base_part = fname_part
-        else:
-             base_part = filename_main
 
+        # Default string generation BEFORE attempting autosave (Keeps full path structure)
         if add_counter:
             cnt_str = f"_{int(current_cnt):05d}"
-            full_filename_str = f"{base_part}{cnt_str}{extras_str}"
+            full_filename_str = f"{filename_main}{cnt_str}{extras_str}"
         else:
-            full_filename_str = f"{base_part}{extras_str}"
+            full_filename_str = f"{filename_main}{extras_str}"
 
         rgba_images, output_mask = self.prepare_rgba(images, mask)
 
@@ -197,11 +209,12 @@ class IMGNR_Preview_Base:
             data_uri = f"data:image/png;base64,{img_b64}"
             
             if autosave:
-                 _, _, saved_rel_path, next_cnt, saved_base_name = save_image_to_disk(
+                 _, _, saved_rel_path, next_cnt, saved_base_name, save_status = save_image_to_disk(
                      img_b64, filename_main, current_cnt, add_counter, filename_extras, overwrite, 
                      embed_workflow, prompt, extra_pnginfo
                  )
                  current_cnt = next_cnt
+                 # Overwrite the default string with the exact full saved final name (including _001 overrides)
                  full_filename_str = saved_base_name 
 
             # Flatten relevant metadata for easy JS Diffing
@@ -218,6 +231,7 @@ class IMGNR_Preview_Base:
                 "height": pil_img.height,
                 "current_counter": current_cnt,
                 "saved_filename": saved_rel_path,
+                "save_status": save_status,
                 "params": {
                     "filename_main": filename_main,
                     "filename_extras": filename_extras,

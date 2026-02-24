@@ -15,6 +15,7 @@
 // NEW: Session Cache for disposable previews. Reference automatically locks to JSON when Pinned Right.
 // FIXED: Reference image remains visible on page reload (clipped with placeholder)
 // FIXED: Reference image and Current image alignment (1px overbleed matched)
+// FIXED: full_filename output missed overwrite counter
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
@@ -515,7 +516,11 @@ app.registerExtension({
                     const updateUIState = () => {
                         const autosave = this.widgets.find(w => w.name === "autosave")?.value;
                         if (this.savedFilename) {
-                            statusLabel.innerHTML = `SAVED:<br><span style="font-weight:normal; font-size:9px;">${this.savedFilename}</span>`;
+                            let prefix = "SAVED:";
+                            if (this.saveStatus === "overwritten") prefix = "File Exists, SAVED OVER:";
+                            else if (this.saveStatus === "saved_as") prefix = "File Exists, SAVED AS:";
+
+                            statusLabel.innerHTML = `${prefix}<br><span style="font-weight:normal; font-size:9px;">${this.savedFilename}</span>`;
                             statusLabel.style.color = "var(--input-text)"; 
                             statusLabel.title = this.savedFilename; 
                         } else {
@@ -572,6 +577,7 @@ app.registerExtension({
                                 const cntWidget = this.widgets.find(w => w.name === "counter");
                                 if (cntWidget) cntWidget.value = result.new_counter;
                                 this.savedFilename = result.relative_path;
+                                this.saveStatus = result.save_status;
                                 updateUIState();
                             } else {
                                 alert("Save Failed: " + result.message); saveBtn.textContent = "Error";
@@ -701,6 +707,7 @@ app.registerExtension({
                                 if (cntWidget) cntWidget.value = info.current_counter;
                             }
                             this.savedFilename = info.saved_filename || null;
+                            this.saveStatus = info.save_status || null;
                             if (this.updateUIState) this.updateUIState();
                         }
                     }
