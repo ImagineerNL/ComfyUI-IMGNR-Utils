@@ -18,6 +18,9 @@ from .diy_nodes import NODE_CLASS_MAPPINGS as diynodes_mappings, NODE_DISPLAY_NA
 # Import DIY Reconstructor
 from .diy_reconstructor import NODE_CLASS_MAPPINGS as diyreconstructor_mappings, NODE_DISPLAY_NAME_MAPPINGS as diyreconstructor_display_mappings
 
+# Import ABBA Switch
+from .abba_switch import NODE_CLASS_MAPPINGS as abbaswitch_mappings, NODE_DISPLAY_NAME_MAPPINGS as abbaswitch_display_mappings
+
 # Location of Javascript files
 WEB_DIRECTORY = "./js"
 
@@ -45,6 +48,10 @@ ALL_NODE_DISPLAY_NAME_MAPPINGS.update(diynodes_display_mappings)
 ALL_NODE_CLASS_MAPPINGS.update(diyreconstructor_mappings)
 ALL_NODE_DISPLAY_NAME_MAPPINGS.update(diyreconstructor_display_mappings)
 
+# Update with mappings from abba_switch
+ALL_NODE_CLASS_MAPPINGS.update(abbaswitch_mappings)
+ALL_NODE_DISPLAY_NAME_MAPPINGS.update(abbaswitch_display_mappings)
+
 __all__ = ['ALL_NODE_CLASS_MAPPINGS', 'ALL_NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIRECTORY']
 
 # Use the final merged dict names
@@ -52,4 +59,4 @@ NODE_CLASS_MAPPINGS = ALL_NODE_CLASS_MAPPINGS
 NODE_DISPLAY_NAME_MAPPINGS = ALL_NODE_DISPLAY_NAME_MAPPINGS
 
 # Print statement 
-print(f"{C.LOG_PREFIX} Loaded: Split Screen, CatchEditText, PreviewImage, UMightHaveANodeForThat, DIY Nodes")
+print(f"{C.LOG_PREFIX} Loaded: Split Screen, CatchEditText, PreviewImage, UMightHaveANodeForThat, DIY Nodes, ABBA Switch")

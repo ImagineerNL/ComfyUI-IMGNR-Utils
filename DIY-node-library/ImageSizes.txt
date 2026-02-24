@@ -1,13 +1,24 @@
 # Example Standard Image Sizes.
 # Update or edit to your own desire.
-# Place in User>IMGNR-Utils>Txt2Combo to autoload the node on next server start.
-# Node name: Txt2Combo ImageSizes
+# Place in User>IMGNR-Utils>DIY-nodes to autoload the node on next server start.
+# Node name: DIY: ImageSizes
+# Best Practice (ZiT) image sizes according to devs: 
+# > Not only are they common for serving as regular inference resolution ratio for more than approximately 95% cases, 
+# > but also they are in domain in our last training stage.
+# > https://huggingface.co/Tongyi-MAI/Z-Image-Turbo/discussions/28
 [Preset]; [Width=int]; [Height=int]
-1024x1024; 1024; 1024
-2046x2048; 2048; 2048
-Instagram Portrait - 1080x1350; 1080; 1350
-Instagram Square - 1080x1080; 1080; 1080
-Insta/TikTok Reel - 1080x1920; 1080; 1920
-OpenArt App - 1500x1000; 1500; 1000
-Pinterest - 1000x1500; 1000; 1500
-
+S (1:1) 1024x1024; 1024; 1024
+S (4:3) 1152x864; 1152; 864
+S (3:2) 1248x832; 1248; 832
+S (16:9) 1280x720; 1280; 720
+S (21:9) 1344x576; 1344; 576
+M (1:1) 1280x1280; 1280; 1280
+M (4:3) 1472x1104; 1472; 1104
+M (3:2) 1536x1024; 1536; 1024
+M (16:9) 1536x864; 1536; 864
+M (21:9) 1680x720; 1680; 720
+L (1:1) 1536x1536; 1536; 1536
+L (4:3) 1728x1296; 1728; 1296
+L (3:2) 1872x1248; 1872; 1248
+L (16:9) 2048x1152; 2048; 1152
+L (21:9) 2016x864; 2016; 864
