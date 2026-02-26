@@ -9,6 +9,7 @@
 # Fixed: Preview Node now correctly passes metadata for diffing
 # Updated: Renamed Preview Ad-hoc Save - LastGen Compare (IMGNR)
 # FINAL: Split into 3 distinct nodes (No Save, Ad-Hoc Save, Compare)
+# FIXED: Workflow not embedded when triggering ad-hoc manual save outside execution loop
 
 import os
 import torch
@@ -24,6 +25,10 @@ from server import PromptServer
 from aiohttp import web
 import folder_paths
 from . import IMGNR_constants as C
+
+# --- GLOBAL CACHE FOR MANUAL SAVES ---
+# Maps node_id -> {"prompt": prompt, "extra_pnginfo": extra_pnginfo}
+IMGNR_WORKFLOW_CACHE = {}
 
 # --- UTILITY: SAVE FUNCTION ---
 def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, filename_extras, overwrite, embed_workflow=False, prompt=None, extra_pnginfo=None, output_dir=""):
@@ -115,6 +120,11 @@ def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, f
 @PromptServer.instance.routes.post("/imgnr/save_manual")
 async def imgnr_save_manual(request):
     data = await request.json()
+    
+    # Extract cached workflow metadata
+    node_id = str(data.get("node_id", ""))
+    cached_meta = IMGNR_WORKFLOW_CACHE.get(node_id, {})
+    
     success, full_path, rel_path, new_cnt, base_name, save_status = save_image_to_disk(
         image_data_base64=data.get("image"),
         filename_main=data.get("filename_main"),
@@ -122,7 +132,9 @@ async def imgnr_save_manual(request):
         add_counter=data.get("add_counter"),
         filename_extras=data.get("filename_extras"),
         overwrite=data.get("overwrite"),
-        embed_workflow=False 
+        embed_workflow=data.get("embed_workflow", True),
+        prompt=cached_meta.get("prompt", None),
+        extra_pnginfo=cached_meta.get("extra_pnginfo", None)
     )
     return web.json_response({
         "success": success, 
@@ -180,11 +192,19 @@ class IMGNR_Preview_Base:
         return data
 
     # Fixed signature: Now includes unique_id=None to handle ComfyUI's hidden inputs without crashing
-    def process_image(self, images, mask=None, filename_main="ComfyUI", counter=1, add_counter=True, filename_extras="", autosave=False, embed_workflow=False, overwrite=False, prompt=None, extra_pnginfo=None, unique_id=None):
+    def process_image(self, images, mask=None, filename_main="ComfyUI", counter=1, add_counter=True, filename_extras="", autosave=False, embed_workflow=True, overwrite=False, prompt=None, extra_pnginfo=None, unique_id=None):
         ui_payload = []
         current_cnt = counter
         saved_rel_path = None 
         save_status = None
+        
+        # Cache workflow for manual saves
+        if unique_id is not None:
+            node_id_str = str(unique_id[0]) if isinstance(unique_id, list) else str(unique_id)
+            IMGNR_WORKFLOW_CACHE[node_id_str] = {
+                "prompt": prompt,
+                "extra_pnginfo": extra_pnginfo
+            }
         
         extras_str = f"_{filename_extras}" if filename_extras and filename_extras.strip() else ""
 
@@ -236,7 +256,8 @@ class IMGNR_Preview_Base:
                     "filename_main": filename_main,
                     "filename_extras": filename_extras,
                     "add_counter": add_counter,
-                    "overwrite": overwrite
+                    "overwrite": overwrite,
+                    "embed_workflow": embed_workflow
                 },
                 "meta": meta_payload # Passed to JS for A/B Diff
             })
