@@ -18,8 +18,6 @@
 // FIXED: full_filename output missed overwrite counter
 // FIXED: Slider Value resets on tab changes / reloads
 // FIXED: Workflow metadata missing when clicking Manual Save Button
-// NEW: Bypass/Mute visual handling (Opacity toggle and invisible Glass Pane to block clicks)
-
 
 import { app } from "../../../scripts/app.js";
 import { api } from "../../../scripts/api.js";
@@ -301,16 +299,7 @@ app.registerExtension({
                 Object.assign(previewContainer.style, {
                     width: "100%", position: "relative", display: "flex", flexDirection: "column",
                     alignItems: "center", justifyContent: "center", marginTop: "4px", marginBottom: "4px",
-                    background: "transparent",
-                    transition: "opacity 0.2s ease" // Smooth transition for bypass toggling
-                });
-
-                // --- NEW: PASSTHROUGH ZOOM SCROLLING ---
-                // Forwards wheel events from the DOM widget straight to the LiteGraph canvas
-                previewContainer.addEventListener("wheel", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    app.canvas.canvas.dispatchEvent(new WheelEvent(e.type, e));
+                    background: "var(--component-node-widget-background)" 
                 });
 
                 const imgHolder = document.createElement("div");
@@ -318,7 +307,7 @@ app.registerExtension({
                 Object.assign(imgHolder.style, {
                     display:"flex", alignItems:"center", justifyContent:"center", 
                     width:"100%", height:"100%", overflow:"hidden", border: "1px solid var(--component-node-widget-background)",
-                    flexGrow: "1", flexShrink: "1", minHeight: "256px", minWidth: "256px", background: "rgba(0,0,0,0.2)",
+                    flexGrow: "1", flexShrink: "1", minHeight: "256px", minWidth: "256px",
                     position: "relative"
                 });
                 previewContainer.appendChild(imgHolder);
@@ -329,7 +318,7 @@ app.registerExtension({
                 Object.assign(infoBar.style, {
                     width: "100%", height: "24px", minHeight: "24px", flexShrink: "0",
                     position: "relative", display: "none",
-                    background: "transparent", fontSize: "var(--comfy-textarea-font-size)",
+                    background: "var(--component-node-background)", fontSize: "var(--comfy-textarea-font-size)",
                     color: "var(--border-color)", fontFamily: "Inter, Arial, sans-serif",
                 });
 
@@ -356,7 +345,7 @@ app.registerExtension({
                     const compWrapper = document.createElement("div");
                     Object.assign(compWrapper.style, { 
                         width: "100%", display: "flex", flexDirection: "column", flexShrink: "0",
-                        background: "transparent"
+                        background: "var(--component-node-background)"
                     });
                     
                     const compControls = document.createElement("div");
@@ -488,7 +477,7 @@ app.registerExtension({
                     const diffBox = document.createElement("div");
                     Object.assign(diffBox.style, {
                         width: "100%", fontSize: "10px", color: "var(--input-text)", flexShrink: "0",
-                        textAlign: "left", padding: "6px", background: "transparent", 
+                        textAlign: "left", padding: "6px", background: "var(--component-node-background)", 
                         whiteSpace: "normal", wordBreak: "break-word", lineHeight: "1.3"
                     });
                     
@@ -509,7 +498,7 @@ app.registerExtension({
                     Object.assign(controls.style, {
                         width: "100%", padding: "6px 5px", flexShrink: "0",
                         display: "flex", flexDirection: "column", alignItems: "center", gap: "5px",
-                        background: "transparent"                        
+                        background: "var(--component-node-background)"                        
                     });
 
                     const statusLabel = document.createElement("div");
@@ -616,15 +605,6 @@ app.registerExtension({
                     requestAnimationFrame(() => updateUIState());
                     this.updateUIState = updateUIState; 
                 }
-
-                // --- NEW: GLASS PANE (Physical shield to block clicks when disabled) ---
-                const glassPane = document.createElement("div");
-                Object.assign(glassPane.style, {
-                    position: "absolute", top: "0", left: "0", width: "100%", height: "100%",
-                    zIndex: "9999", display: "none"
-                });
-                this.glassPane = glassPane;
-                previewContainer.appendChild(glassPane);
 
                 this.previewWidget = this.addDOMWidget("base64Preview", "div", previewContainer, {});
                 requestAnimationFrame(() => ensureImageExists(this));
@@ -751,26 +731,6 @@ app.registerExtension({
                 
                 ensureImageExists(this);
                 setNodeSizeToImage(this);
-            };
-
-            // --- 8. HANDLE BYPASS/MUTE STATE VISUALS ---
-            const onDrawBackground = nodeType.prototype.onDrawBackground;
-            nodeType.prototype.onDrawBackground = function (ctx) {
-                onDrawBackground?.apply(this, arguments);
-
-                if (this.previewContainerElement) {
-                    if (this.lastMode !== this.mode) {
-                        this.lastMode = this.mode;
-                        // LiteGraph.NEVER = 2 (Mute), LiteGraph.BYPASS = 4 (Bypass)
-                        if (this.mode === 2 || this.mode === 4) {
-                            this.previewContainerElement.style.opacity = "0.5";
-                            if (this.glassPane) this.glassPane.style.display = "block";
-                        } else {
-                            this.previewContainerElement.style.opacity = "1";
-                            if (this.glassPane) this.glassPane.style.display = "none";
-                        }
-                    }
-                }
             };
         }
     },

@@ -2,8 +2,6 @@
 // Version: Status Color + Toggle 
 // Support Soft + Hard Mute
 // Fix: Disabled native tooltip popup on text widget
-// NEW: Bypass/Mute visual handling (Opacity toggle and invisible Glass Pane to block clicks)
-// FIXED: Zooming (Scroll) passthrough to LiteGraph canvas over text widgets
 
 import { app } from "../../../scripts/app.js";
 
@@ -102,40 +100,6 @@ app.registerExtension({
                     updateStatus();
                 }, 100);
 
-                // --- NEW: Scroll Passthrough & Glass Pane Setup ---
-                requestAnimationFrame(() => {
-                    if (node.widgets) {
-                        for (let w of node.widgets) {
-                            if (w.inputEl && !w.glassPane) {
-                                // 1. Scroll Passthrough for Active State
-                                w.inputEl.addEventListener("wheel", (e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    app.canvas.canvas.dispatchEvent(new WheelEvent(e.type, e));
-                                });
-
-                                // 2. Glass Pane for Muted/Bypassed State
-                                const glassPane = document.createElement("div");
-                                Object.assign(glassPane.style, {
-                                    position: "absolute", top: "0", left: "0", width: "100%", height: "100%",
-                                    zIndex: "9999", display: "none"
-                                });
-                                
-                                glassPane.addEventListener("wheel", (e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    app.canvas.canvas.dispatchEvent(new WheelEvent(e.type, e));
-                                });
-
-                                if (w.inputEl.parentElement) {
-                                    w.inputEl.parentElement.appendChild(glassPane);
-                                    w.glassPane = glassPane;
-                                }
-                            }
-                        }
-                    }
-                });
-
                 return r;
             };
 
@@ -163,29 +127,6 @@ app.registerExtension({
                     const targetWidget = this.widgets.find(w => w.name === "editable_text_widget");
                     if (targetWidget && targetWidget.value !== newText) {
                         targetWidget.value = newText;
-                    }
-                }
-            };
-
-            // --- NEW: HANDLE BYPASS/MUTE STATE VISUALS ---
-            const onDrawBackground = nodeType.prototype.onDrawBackground;
-            nodeType.prototype.onDrawBackground = function (ctx) {
-                if (onDrawBackground) onDrawBackground.apply(this, arguments);
-
-                if (this.lastMode !== this.mode) {
-                    this.lastMode = this.mode;
-                    // LiteGraph.NEVER = 2 (Mute), LiteGraph.BYPASS = 4 (Bypass)
-                    const isInactive = (this.mode === 2 || this.mode === 4);
-                    
-                    if (this.widgets) {
-                        for (let w of this.widgets) {
-                            if (w.inputEl) {
-                                w.inputEl.style.opacity = isInactive ? "0.5" : "1";
-                            }
-                            if (w.glassPane) {
-                                w.glassPane.style.display = isInactive ? "block" : "none";
-                            }
-                        }
                     }
                 }
             };
