@@ -24,7 +24,7 @@
   - [7. DIY-Nodes (Previously Txt2Combo nodes)](#7-diy-nodes-previously-txt2combo-nodes)
   - [8. ABBA Switch](#8-abba-switch)
 - [📥 Installation](#-installation)
-- [📋 ChangeLog (V3.3.2)](#-changelog-v332)
+- [📋 ChangeLog (V3.3.3)](#-changelog-v333)
 - [⚠️ Disclaimer \& Credits](#️-disclaimer--credits)
   - [Credits \& Inspiration](#credits--inspiration)
   - [Definitely worth checking out](#definitely-worth-checking-out)
@@ -194,7 +194,7 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
   comfy node registry-install ComfyUI-IMGNR-Utils
 ```
 
-## 📋 ChangeLog (V3.3.2)
+## 📋 ChangeLog (V3.3.3)
 
 | Major | Minor | Notable Changes |
 | :-------------: | :-------------: | :------------- |

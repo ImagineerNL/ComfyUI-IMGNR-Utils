@@ -3,6 +3,8 @@
 # Fixes: text match search for missing nodes; debug mode
 # =========================================================
 # FEATURE: Dynamic Node alternative search
+# NEW: Added bonus + marker for bookmarked or already present nodes
+# DIAGNOSTIC: Added verbose debug logging for Active/Bookmark array matching
 
 import json, os, nodes, folder_paths, inspect, re
 from server import PromptServer
@@ -101,7 +103,7 @@ class UMHANFT_Logic:
         text = re.sub(r'[^a-zA-Z0-9]', ' ', text)
         return {w.lower() for w in text.split() if len(w) >= 3}
 
-    def find_alternatives(self, target_node_type, target_title=None, neighbors=None, live_sig=None, strict=True, min_score=50, max_alts=15, strict_connected=False, debug_enabled=False, debug_filter=""):
+    def find_alternatives(self, target_node_type, target_title=None, neighbors=None, live_sig=None, strict=True, min_score=50, max_alts=15, strict_connected=False, debug_enabled=False, debug_filter="", active_nodes=None, bookmarked_nodes=None):
         
         if len(self.signatures) != len(nodes.NODE_CLASS_MAPPINGS):
             self.scan_all()
@@ -129,9 +131,15 @@ class UMHANFT_Logic:
         req_in = set(self.ensure_hashable(neighbors.get("required_inputs", []))) if neighbors else set()
         prov_out = set(self.ensure_hashable(neighbors.get("provided_outputs", []))) if neighbors else set()
 
+        # Fast lookup sets for priority boosting (Cleaned to str)
+        active_set = set(str(x) for x in (active_nodes or []))
+        bookmarked_set = set(str(x) for x in (bookmarked_nodes or []))
+
         if debug_enabled:
             print(f"\n{C.WARN_PREFIX} [UMHANFT] --- DEBUG SEARCH: {target_node_type} ---")
             print(f"{C.WARN_PREFIX} Settings -> Strict: {strict} | Connected: {strict_connected} | Min: {min_score}")
+            print(f"{C.WARN_PREFIX} JS Payload -> Active Nodes ({len(active_set)} found): {list(active_set)}")
+            print(f"{C.WARN_PREFIX} JS Payload -> Bookmarked Nodes ({len(bookmarked_set)} found): {list(bookmarked_set)}")
             if debug_filter:
                 print(f"{C.WARN_PREFIX} Debug Filter Active: Only showing logs for '{debug_filter}'")
 
@@ -192,10 +200,20 @@ class UMHANFT_Logic:
                 if req_in.intersection(sig_out): score += 25
                 if prov_out.intersection(sig_in): score += 25
 
+            # Apply Priority Boosts (Active Workflow / Bookmarks)
+            is_active = (name in active_set) or (disp_name in active_set)
+            is_bookmarked = (name in bookmarked_set) or (disp_name in bookmarked_set)
+            
+            if is_active: score += 20
+            if is_bookmarked: score += 20
+
             if should_debug_this:
-                print(f"{C.WARN_PREFIX} >>> EVAL: {name}")
-                print(f"{C.WARN_PREFIX} Passed Strict? {passed_strict} | Raw Score: {score}")
-                print(f"{C.WARN_PREFIX} Tokens Shared: {common_tokens}")
+                print(f"{C.WARN_PREFIX} >>> EVAL CANDIDATE: {name}")
+                print(f"{C.WARN_PREFIX}     Evaluating Class Name: '{name}'")
+                print(f"{C.WARN_PREFIX}     Evaluating Disp Name:  '{disp_name}'")
+                print(f"{C.WARN_PREFIX}     Is Active? {is_active} (Class Match: {name in active_set}, Disp Match: {disp_name in active_set})")
+                print(f"{C.WARN_PREFIX}     Is Bookmarked? {is_bookmarked} (Class Match: {name in bookmarked_set}, Disp Match: {disp_name in bookmarked_set})")
+                print(f"{C.WARN_PREFIX}     Passed Strict? {passed_strict} | Raw Score: {score}")
 
             if not passed_strict: continue
 
@@ -205,7 +223,9 @@ class UMHANFT_Logic:
                     "display": disp_name,
                     "pack": self.get_pack_name(name),
                     "raw_score": score,
-                    "raw_name": disp_name.lower()
+                    "raw_name": disp_name.lower(),
+                    "is_active": is_active,
+                    "is_bookmarked": is_bookmarked
                 })
 
         # --- NORMALIZE SCALING (0-100) ---
@@ -224,7 +244,9 @@ class UMHANFT_Logic:
                     "display": f"{c['display']} {c['pack']}",
                     "score": int(relative_score),
                     "raw_score": c["raw_score"],
-                    "raw_name": c["raw_name"]
+                    "raw_name": c["raw_name"],
+                    "is_active": c["is_active"],
+                    "is_bookmarked": c["is_bookmarked"]
                 })
 
         final_results.sort(key=lambda x: (-x["raw_score"], x["raw_name"]))
@@ -233,7 +255,7 @@ class UMHANFT_Logic:
             print(f"{C.WARN_PREFIX} [UMHANFT] Max Raw Score: {max_score}")
             print(f"{C.WARN_PREFIX} Top 3 Candidates:")
             for r in final_results[:3]:
-                print(f"{C.WARN_PREFIX}   -> {r['display']} (Rel: {r['score']}%)")
+                print(f"{C.WARN_PREFIX}   -> {r['display']} (Rel: {r['score']}%) [Act:{r['is_active']} | Bkmk:{r['is_bookmarked']}]")
 
         return final_results[:max_alts]
 
@@ -254,7 +276,9 @@ async def find_alt_handler(request):
         max_alts=data.get("max_alts", 15),
         strict_connected=data.get("strict_connected", False),
         debug_enabled=data.get("debug_enabled", False),
-        debug_filter=data.get("debug_node_text", "")
+        debug_filter=data.get("debug_node_text", ""),
+        active_nodes=data.get("active_nodes", []),
+        bookmarked_nodes=data.get("bookmarked_nodes", [])
     )
     return web.json_response({"alternatives": alts, "current_pack": logic_instance.get_pack_name(node_type), "count": len(alts)})
 
