@@ -3,9 +3,9 @@
 [project]
 # Unique identifier for your node package. Immutable after creation on the registry.
 name = "ComfyUI-IMGNR-Utils"
-description = "lightweight utility pack: Split Screen, Catch&Edit Text Tools, Smart Previews plus Compare and a DIY Node engine. Includes UMightHaveANodeForThat for (missing)node alternatives. All power, no bloat, and absolutely no external requirements."
+description = "lightweight utility pack: Split Screen, Catch&Edit Text Tools, Smart Previews plus Compare and a DIY Node engine. Includes UMightHaveANodeForThat for (missing)node alternatives. All power, no bloat, and absolutely no extra requirements."
 # Your node package's version. MUST follow semantic versioning (e.g., MAJOR.MINOR.PATCH).
-version = "3.3.3" #
+version = "3.4.0" #
 license = { file = "LICENSE" }
 # Project dependencies. PEP 621 standard replaces requirements.txt here.
 dependencies = []

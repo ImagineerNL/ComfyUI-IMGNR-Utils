@@ -1,3 +1,5 @@
+// IMGNR-Utils/js/IMGNR_settings.js
+
 import { app } from "../../scripts/app.js";
 
 app.registerExtension({
@@ -190,6 +192,25 @@ app.registerExtension({
             defaultValue: true,
         });
 
+        // =========================================================
+        // SECTION: NODE SWAPPING & UX
+        // =========================================================
+        
+        app.ui.settings.addSetting({
+            id: `${PREFIX}.UX.EnableContextMenu`,
+            name: "Enable 'Swap Save/Preview Image' ContextMenu Override",
+            tooltip: "Enables the right-click menu option to quickly swap between Core and IMGNR Preview/Save nodes.",
+            type: "boolean",
+            defaultValue: true,
+        });
+
+        app.ui.settings.addSetting({
+            id: `${PREFIX}.UX.ZoomToFit`,
+            name: "Zoom To Fit on Workflow Load",
+            tooltip: "Automatically zooms and centers the canvas to fit all nodes whenever a workflow is loaded (Drag & Drop or Load Button).",
+            type: "boolean",
+            defaultValue: false,
+        });
 
         // =========================================================
         // SECTION: IMGNR ToSVG-Potracer

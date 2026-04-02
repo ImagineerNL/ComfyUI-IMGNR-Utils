@@ -12,6 +12,8 @@
 # FIXED: Workflow not embedded when triggering ad-hoc manual save outside execution loop
 
 import os
+import re
+from datetime import datetime
 import torch
 import numpy as np
 from PIL import Image
@@ -30,8 +32,71 @@ from . import IMGNR_constants as C
 # Maps node_id -> {"prompt": prompt, "extra_pnginfo": extra_pnginfo}
 IMGNR_WORKFLOW_CACHE = {}
 
+def format_comfy_string(text, prompt=None, extra_pnginfo=None):
+    if not isinstance(text, str): 
+        return text
+
+    # 1. Resolve date variables
+    def format_date(match):
+        fmt = match.group(1)
+        fmt = fmt.replace("yyyy", "%Y").replace("yy", "%y")
+        fmt = fmt.replace("MM", "%m").replace("dd", "%d")
+        fmt = fmt.replace("HH", "%H").replace("mm", "%M").replace("ss", "%S")
+        try:
+            return datetime.now().strftime(fmt)
+        except Exception:
+            return match.group(0)
+    
+    text = re.sub(r"%date:(.*?)%", format_date, text)
+
+    # 2. Resolve ComfyUI node variables (e.g. %Empty Latent Image.width%)
+    if prompt:
+        title_to_id = {}
+        class_to_id = {}
+        
+        if extra_pnginfo and "workflow" in extra_pnginfo and "nodes" in extra_pnginfo["workflow"]:
+            for node in extra_pnginfo["workflow"]["nodes"]:
+                node_id = str(node.get("id"))
+                title = node.get("title", "")
+                class_type = node.get("type", "")
+                if title: title_to_id[title] = node_id
+                if class_type: class_to_id[class_type] = node_id
+        
+        # Fallback for prompt-only situations
+        for node_id, node_data in prompt.items():
+            class_type = node_data.get("class_type", "")
+            if class_type and class_type not in class_to_id:
+                class_to_id[class_type] = str(node_id)
+
+        def resolve_var(match):
+            var_path = match.group(1)
+            parts = var_path.rsplit(".", 1)
+            if len(parts) != 2:
+                return match.group(0)
+            
+            node_name, widget_name = parts
+            target_id = title_to_id.get(node_name) or class_to_id.get(node_name)
+            
+            if target_id and target_id in prompt:
+                inputs = prompt[target_id].get("inputs", {})
+                if widget_name in inputs:
+                    val = inputs[widget_name]
+                    # Handle primitive links implicitly (grabs evaluated values from upstream)
+                    if isinstance(val, list) and len(val) == 2: 
+                        link_id = str(val[0])
+                        if link_id in prompt:
+                            for k, v in prompt[link_id].get("inputs", {}).items():
+                                if not isinstance(v, list):
+                                    return str(v)
+                    return str(val)
+            return match.group(0)
+            
+        text = re.sub(r"%([^%]+)%", resolve_var, text)
+        
+    return text
+
 # --- UTILITY: SAVE FUNCTION ---
-def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, filename_extras, overwrite, embed_workflow=False, prompt=None, extra_pnginfo=None, output_dir=""):
+def save_image_to_disk(image_data_base64, filename_prefix, counter, add_counter, filename_extras, overwrite, embed_workflow=False, prompt=None, extra_pnginfo=None, output_dir=""):
     try:
         # 1. Decode Image
         if "," in image_data_base64:
@@ -49,7 +114,10 @@ def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, f
                     metadata.add_text(x, json.dumps(extra_pnginfo[x]))
 
         # 3. Construct Filename
-        if not filename_main: filename_main = "ComfyUI"
+        if not filename_prefix: filename_prefix = "ComfyUI"
+
+        # Catch manual ad-hoc dates and variables
+        filename_prefix = format_comfy_string(filename_prefix, prompt, extra_pnginfo)
 
         extras_str = f"_{filename_extras}" if filename_extras and filename_extras.strip() else ""
         
@@ -57,14 +125,9 @@ def save_image_to_disk(image_data_base64, filename_main, counter, add_counter, f
         if output_dir: 
              full_output_dir = output_dir
         
-        # Split prefix to handle subfolders
-        if "/" in filename_main or "\\" in filename_main:
-            path_part, filename_part = os.path.split(filename_main)
-            save_path = os.path.join(full_output_dir, path_part)
-        else:
-            path_part = ""
-            filename_part = filename_main
-            save_path = full_output_dir
+        # Resolve ComfyUI formatting natively (handles subfolders, %width%, etc.)
+        full_output_folder, filename_part, _, path_part, _ = folder_paths.get_save_image_path(filename_prefix, full_output_dir, img.width, img.height)
+        save_path = full_output_folder
 
         if not os.path.exists(save_path):
             os.makedirs(save_path)
@@ -127,7 +190,7 @@ async def imgnr_save_manual(request):
     
     success, full_path, rel_path, new_cnt, base_name, save_status = save_image_to_disk(
         image_data_base64=data.get("image"),
-        filename_main=data.get("filename_main"),
+        filename_prefix=data.get("filename_prefix"),
         counter=data.get("counter"),
         add_counter=data.get("add_counter"),
         filename_extras=data.get("filename_extras"),
@@ -192,7 +255,7 @@ class IMGNR_Preview_Base:
         return data
 
     # Fixed signature: Now includes unique_id=None to handle ComfyUI's hidden inputs without crashing
-    def process_image(self, images, mask=None, filename_main="ComfyUI", counter=1, add_counter=True, filename_extras="", autosave=False, embed_workflow=True, overwrite=False, prompt=None, extra_pnginfo=None, unique_id=None):
+    def process_image(self, images, mask=None, filename_prefix="ComfyUI", counter=1, add_counter=True, filename_extras="", autosave=False, embed_workflow=True, overwrite=False, prompt=None, extra_pnginfo=None, unique_id=None):
         ui_payload = []
         current_cnt = counter
         saved_rel_path = None 
@@ -208,18 +271,26 @@ class IMGNR_Preview_Base:
         
         extras_str = f"_{filename_extras}" if filename_extras and filename_extras.strip() else ""
 
+        # Resolve ComfyUI formatting natively for the preview payload
+        width = images[0].shape[1] if (images is not None and len(images) > 0) else 0
+        height = images[0].shape[0] if (images is not None and len(images) > 0) else 0
+        
+        resolved_prefix = format_comfy_string(filename_prefix, prompt, extra_pnginfo)
+        _, formatted_name, _, formatted_subfolder, _ = folder_paths.get_save_image_path(resolved_prefix, folder_paths.get_output_directory(), width, height)
+        resolved_filename_prefix = os.path.join(formatted_subfolder, formatted_name).replace("\\", "/") if formatted_subfolder else formatted_name
+
         # Default string generation BEFORE attempting autosave (Keeps full path structure)
         if add_counter:
             cnt_str = f"_{int(current_cnt):05d}"
-            full_filename_str = f"{filename_main}{cnt_str}{extras_str}"
+            full_filename_str = f"{resolved_filename_prefix}{cnt_str}{extras_str}"
         else:
-            full_filename_str = f"{filename_main}{extras_str}"
+            full_filename_str = f"{resolved_filename_prefix}{extras_str}"
 
         rgba_images, output_mask = self.prepare_rgba(images, mask)
 
         if rgba_images is None:
              empty = torch.zeros([1, 64, 64, 3])
-             return {"ui": {"imgnr_b64_previews": []}, "result": (empty, empty, filename_main, current_cnt, "")}
+             return {"ui": {"imgnr_b64_previews": []}, "result": (empty, empty, filename_prefix, current_cnt, "")}
 
         try:
             pil_img = self.tensor_to_pil(rgba_images)
@@ -230,7 +301,7 @@ class IMGNR_Preview_Base:
             
             if autosave:
                  _, _, saved_rel_path, next_cnt, saved_base_name, save_status = save_image_to_disk(
-                     img_b64, filename_main, current_cnt, add_counter, filename_extras, overwrite, 
+                     img_b64, filename_prefix, current_cnt, add_counter, filename_extras, overwrite, 
                      embed_workflow, prompt, extra_pnginfo
                  )
                  current_cnt = next_cnt
@@ -253,7 +324,7 @@ class IMGNR_Preview_Base:
                 "saved_filename": saved_rel_path,
                 "save_status": save_status,
                 "params": {
-                    "filename_main": filename_main,
+                    "filename_prefix": filename_prefix,
                     "filename_extras": filename_extras,
                     "add_counter": add_counter,
                     "overwrite": overwrite,
@@ -267,7 +338,7 @@ class IMGNR_Preview_Base:
         
         return {
             "ui": {"imgnr_b64_previews": ui_payload}, 
-            "result": (rgba_images, output_mask, filename_main, current_cnt, full_filename_str)
+            "result": (rgba_images, output_mask, filename_prefix, current_cnt, full_filename_str)
         }
 
 
@@ -306,10 +377,10 @@ class PreviewImageAdHocSaveNode(IMGNR_Preview_Base):
         return {
             "required": {
                 "images": ("IMAGE", ),
-                "filename_main": ("STRING", {"default": "ComfyUI"}),
+                "filename_prefix": ("STRING", {"default": "ComfyUI", "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes."}),
                 "counter": ("INT", {"default": 1, "min": 0, "max": 999999, "step": 1}),
                 "add_counter": ("BOOLEAN", {"default": True}),
-                "filename_extras": ("STRING", {"default": ""}),
+                "filename_extras": ("STRING", {"default": "", "tooltip": "Text to add after the counter.(no formatting)"}),
                 "autosave": ("BOOLEAN", {"default": False}),
                 "embed_workflow": ("BOOLEAN", {"default": True}), 
                 "overwrite": ("BOOLEAN", {"default": False}),
@@ -321,7 +392,7 @@ class PreviewImageAdHocSaveNode(IMGNR_Preview_Base):
         }
 
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "INT", "STRING")
-    RETURN_NAMES = ("image", "mask", "filename_main", "counter_out", "full_filename")
+    RETURN_NAMES = ("image", "mask", "filename_prefix", "counter_out", "full_filename")
     FUNCTION = "run"
     OUTPUT_NODE = True 
     CATEGORY = "IMGNR"
@@ -343,10 +414,10 @@ class PreviewImageCompareNode(IMGNR_Preview_Base):
         return {
             "required": {
                 "images": ("IMAGE", ),
-                "filename_main": ("STRING", {"default": "ComfyUI"}),
+                "filename_prefix": ("STRING", {"default": "ComfyUI", "tooltip": "The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes."}),
                 "counter": ("INT", {"default": 1, "min": 0, "max": 999999, "step": 1}),
                 "add_counter": ("BOOLEAN", {"default": True}),
-                "filename_extras": ("STRING", {"default": ""}),
+                "filename_extras": ("STRING", {"default": "", "tooltip": "Text to add after the counter. (no formatting)"}),
                 "autosave": ("BOOLEAN", {"default": False}),
                 "embed_workflow": ("BOOLEAN", {"default": True}), 
                 "overwrite": ("BOOLEAN", {"default": False}),
@@ -358,7 +429,7 @@ class PreviewImageCompareNode(IMGNR_Preview_Base):
         }
 
     RETURN_TYPES = ("IMAGE", "MASK", "STRING", "INT", "STRING")
-    RETURN_NAMES = ("image", "mask", "filename_main", "counter_out", "full_filename")
+    RETURN_NAMES = ("image", "mask", "filename_prefix", "counter_out", "full_filename")
     FUNCTION = "run"
     OUTPUT_NODE = True 
     CATEGORY = "IMGNR"

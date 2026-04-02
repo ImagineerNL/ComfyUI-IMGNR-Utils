@@ -582,7 +582,7 @@ app.registerExtension({
                         const payload = {
                             node_id: this.id.toString(),
                             image: data.uri,
-                            filename_main: getVal("filename_main"),
+                            filename_prefix: getVal("filename_prefix"),
                             counter: counterVal,
                             add_counter: getVal("add_counter"),
                             filename_extras: getVal("filename_extras"),
