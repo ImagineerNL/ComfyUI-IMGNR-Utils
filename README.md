@@ -24,10 +24,11 @@
   - [7. DIY-Nodes (Previously Txt2Combo nodes)](#7-diy-nodes-previously-txt2combo-nodes)
   - [8. ABBA Switch](#8-abba-switch)
 - [📥 Installation](#-installation)
-- [📋 ChangeLog (V3.3.3)](#-changelog-v333)
-- [⚠️ Disclaimer \& Credits](#️-disclaimer--credits)
+- [📋 ChangeLog (V3.4.0)](#-changelog-v340)
+- [⚠️ Disclaimer, Credits, License](#️-disclaimer-credits-license)
   - [Credits \& Inspiration](#credits--inspiration)
   - [Definitely worth checking out](#definitely-worth-checking-out)
+  - [License](#license)
 
 ---
 
@@ -154,8 +155,8 @@ You can use comboboxes, `STRING`, `TEXTBOX`, `INT`, `FLOAT` and even `concat` di
 
 > ***NOTE:***
 >
-> - *Editing items inside existing sections only requires a Refresh (R).*
-> - *Adding new files (Nodes) or `[Sections]` requires a Server Restart to update the nodes. (`filename` --> Node Name: `DIY: Filename`)*
+> - Editing items inside existing sections only requires a Refresh (R).
+> - Adding new files (Nodes) or `[Sections]` requires a Server Restart to update the nodes. (`filename` --> Node Name: `DIY: Filename`)
 > - More examples in the examples folder [DIY-node-library](./DIY-node-library/) or in the Example Workflows in ComfyUI
 > - Will try to find missing DIY nodes in the node-library; feel free to submit your own by adding an Issue here.
 
@@ -185,7 +186,7 @@ Not much to it.... just swap any 2 inputs
 
 ```bash
 cd ComfyUI/custom_nodes/
-git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
+git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils
 ```
 
 **Option 3: ComfyRegistry**
@@ -194,10 +195,11 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
   comfy node registry-install ComfyUI-IMGNR-Utils
 ```
 
-## 📋 ChangeLog (V3.3.3)
+## 📋 ChangeLog (V3.4.0)
 
 | Major | Minor | Notable Changes |
 | :-------------: | :-------------: | :------------- |
+| | V3.4.0 | New: Rightclick swap SaveImage/PreviewImage node for IMGNR version; Fix Preview Adhoc Save to include variables such as `%date:yyyy-MM-dd%`(also renamed `filename_main` to `filename_prefix` to match standard ComfyUI ); Fix nodes behaviour and coloring when 'disabled' and when zooming |  
 | | V3.3.0 | New: Preview Compare Lastgen; New: ABBA Switch; Fix: Preview-no-save now also doesn't save to workflow |
 | | V3.2.0 | ❌ Breaking change: Txt2Combo renamed to DIY-Nodes due to extended functionality |
 | | V3.1.0 | Expanded on Txt2Combo Nodes, added save, added examples folder [Txt2Combo_Examples](./Txt2Combo_Examples/); toggle for counter in Ad-Hoc Save node.
@@ -208,7 +210,7 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
 | V2.0.0 | | Added new Utility: [Node Matcher ("U Might Have A Node For That")](#5-node-matcher-u-might-have-a-node-for-that) |
 | V1.0.0 | | Initial Upload |
 
-## ⚠️ Disclaimer & Credits
+## ⚠️ Disclaimer, Credits, License
 **Usage:** As with any file you download from the internet: **Use at your own risk**. While tested, this is a personal passion project. Even though I have a degree in IT, I am no programmer by trade. This is a passion project for my own specific usecases and I'm sharing it so other people can benefit from it, the same way as i benefit from other people's work.
 
 ### Credits & Inspiration
@@ -225,5 +227,9 @@ git clone https://github.com/ImagineerNL/ComfyUI-IMGNR-Utils]
 - [LoRaManager](https://github.com/willmiao/ComfyUI-Lora-Manager) by Willmiao
 - [Smart ComfyUI Gallery](https://github.com/biagiomaf/smart-comfyui-gallery) by Biagiomaf
 - [ComfyUI-ToSVG-Potracer](https://github.com/ImagineerNL/ComfyUI-ToSVG-Potracer), Smooth BW Image to Vector made by me (Shameless self-plug)
+
+### License
+
+This package is mostly licensed under the [MIT license](LICENSE}).
 
 [^1]: *The 'inspect' code is heavily inspired on the `inspect combo` in the `String Outputlist` node of [ComfyUI Outputlists Combiner by Gerold Mesinger](https://github.com/geroldmeisinger/ComfyUI-outputlists-combiner). Therefor, the DIY Node and code is licensed under the [GPL-3.0 license](https://www.gnu.org/licenses/gpl-3.0.txt).*

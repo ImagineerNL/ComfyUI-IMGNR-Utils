@@ -21,6 +21,9 @@ from .diy_reconstructor import NODE_CLASS_MAPPINGS as diyreconstructor_mappings,
 # Import ABBA Switch
 from .abba_switch import NODE_CLASS_MAPPINGS as abbaswitch_mappings, NODE_DISPLAY_NAME_MAPPINGS as abbaswitch_display_mappings
 
+# Import Loaders
+### DEV ### from .IMGNR_loaders import NODE_CLASS_MAPPINGS as loaders_mappings, NODE_DISPLAY_NAME_MAPPINGS as loaders_display_mappings
+
 # Location of Javascript files
 WEB_DIRECTORY = "./js"
 
@@ -51,6 +54,10 @@ ALL_NODE_DISPLAY_NAME_MAPPINGS.update(diyreconstructor_display_mappings)
 # Update with mappings from abba_switch
 ALL_NODE_CLASS_MAPPINGS.update(abbaswitch_mappings)
 ALL_NODE_DISPLAY_NAME_MAPPINGS.update(abbaswitch_display_mappings)
+
+# Update with mappings from IMGNR_loaders
+### DEV ### ALL_NODE_CLASS_MAPPINGS.update(loaders_mappings)
+### DEV ### ALL_NODE_DISPLAY_NAME_MAPPINGS.update(loaders_display_mappings)
 
 __all__ = ['ALL_NODE_CLASS_MAPPINGS', 'ALL_NODE_DISPLAY_NAME_MAPPINGS', 'WEB_DIRECTORY']
 
